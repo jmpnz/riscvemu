@@ -1,10 +1,10 @@
 # TODO
 
-[ ] Summarize the Google style guide
 [ ] Create three tasks :
     * "build debug" : Builds a debug version used as pre-task for LLDB Launch.
     * "build release": Builds an optimized build.
 
+[ ] Add MMU/DRAM support and ensure riscv-tests run.
 [ ] Figure out Linking details from Chapter 7 in CS:APP
     * Do we need -fPIC ?
 

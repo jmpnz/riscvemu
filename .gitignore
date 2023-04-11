@@ -51,6 +51,9 @@ _deps
 ### Build File ###
 build/*
 
+### Test Binaries ###
+tests/e2e/*
+
 ### Ninja ###
 .cache/*
 

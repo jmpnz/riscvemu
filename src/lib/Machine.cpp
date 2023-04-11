@@ -7,13 +7,13 @@
 
 namespace riscvemu {
 
-auto CPU::Fetch() -> uint32_t {
-  // Our memory for now is the code [u8 vector] stored in VMContext.code.
-  // Actual memory support would embed an MMU in VMContext
-  // and read from MMU on each execution cycle.
+/// @brief Fetches the next instruction to execute stored @ pc.
+/// @return Returns the instruction in 32-bit format (encoded.)
+auto CPU::fetch() -> uint32_t {
+  // Fetch index of next instruction to execute in code.
   auto index = this->pc;
   // Instructions are encoded in Little Endian format
-  // this implies each n+1 read is shifted by 8 bytes.
+  // We encode the instruction to its 32 bit format here.
   uint32_t const r1 = this->ctx->code.at(index);
   uint32_t const r2 = (this->ctx->code.at(index + 1) << 8);
   uint32_t const r3 = (this->ctx->code.at(index + 2) << 16);
@@ -70,8 +70,10 @@ void CPU::Execute(uint32_t inst) {
 
     break;
   }
-  default:
+  default: {
     std::cerr << "Unknown instruction " << opcode << '\n';
+    break;
+  }
   }
 
   std::cout << "OPCode: " << opcode << " [RD] = " << register_rd
@@ -80,7 +82,7 @@ void CPU::Execute(uint32_t inst) {
 
 void CPU::Run() {
   while (this->pc < this->ctx->code.size()) {
-    auto inst = this->Fetch();
+    auto inst = this->fetch();
     this->pc += 4;
     this->Execute(inst);
   }

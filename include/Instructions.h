@@ -70,9 +70,12 @@ struct Stype {};
 
 /// @brief Instruction represents RISC-V instructions as described
 /// in the ISA.
-/// Instructions are 32 bits wide and encoded in Little Endian format.
-/// [6..0] => OPCode
-/// [19..15] => RS1
+/// Instructions are 32 bits wide and encoded in Little Endian format
+/// the ISA specifies the first 7 bits to be the OPCode but in RISC-V
+/// OPCode don't directly map to instructions but rather an instruction
+/// group, for example 0b0010011 groups (addi, slti, sltiu, xori, ori,andi...)
+/// Instruction simply wraps the bits of an encoded instruction, during
+/// the decode cycle the instruction is transformed to its appropiate type.
 struct Instruction {
   uint8_t opcode_;
   uint64_t instruction;

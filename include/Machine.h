@@ -23,15 +23,12 @@ struct MMU {
   size_t used;
 };
 
-/// @brief Instructions is a typedef for the current file.
-using CPUInstructions = std::vector<uint8_t>;
-
 /// @brief VMContext is the virtual machine execution context, you can think
 /// of it as thread spaces, used for context switching and interrupt
 /// handling.
 // VMContext stores the code executing in a context.
 struct VMContext {
-  CPUInstructions code;
+  std::vector<uint8_t> code;
 
   /// @brief VMContext constructor.
   VMContext(std::vector<uint8_t> code) : code(std::move(code)) {}
@@ -50,9 +47,6 @@ public:
   /// @brief Fetch and decode an instruction, and increment program counter.
   auto FetchDecode() -> Instruction;
 
-  /// @brief Fetch an encoded instruction.
-  auto Fetch() -> uint32_t;
-
   /// @brief Execute a single instruction.
   auto Execute(uint32_t instruction) -> void;
 
@@ -67,6 +61,16 @@ public:
   auto GetPC() const -> uint64_t;
 
 private:
+  /// @brief Fetch instruction at current program counter.
+  // this implies each n+1 read is shifted by 8 bytes.
+  auto fetch() -> uint32_t;
+
+  /// @brief Decode an encoded instruction.
+  auto decode(uint32_t instruction) -> Instruction;
+
+  /// @brief Execurte an instruction.
+  auto execute(const Instruction &inst) -> void;
+
   /// @brief  Program counter,
   /// TODO: maybe start at an actual offset in MMU ?
   offset_t pc = 0;
