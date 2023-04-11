@@ -49,10 +49,10 @@ CTestTestfile.cmake
 _deps
 
 ### Build File ###
-build/
+build/*
 
 ### Ninja ###
-.cache/
+.cache/*
 
 
 ### CMake Patch ###
