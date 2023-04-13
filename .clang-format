@@ -1,6 +1,5 @@
 # LLVM C/C++ Code Style settings
 Language: Cpp
-Standard: Cpp20
 BasedOnStyle: LLVM 
 TabWidth: 4
 IndentWidth: 4

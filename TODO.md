@@ -4,6 +4,10 @@
     * "build debug" : Builds a debug version used as pre-task for LLDB Launch.
     * "build release": Builds an optimized build.
 
+[ ] Use CodeLLDB to do runtime debugging for register states
+ -> idea: Wrap emulator in DebugContext with forward() and backward() ?
+  maybe debug our own emulator in an emulator :monocle: how nice is that.
+
 [ ] Add MMU/DRAM support and ensure riscv-tests run.
 [ ] Figure out Linking details from Chapter 7 in CS:APP
     * Do we need -fPIC ?
