@@ -48,7 +48,6 @@ struct MMU {
     /// @param value
     void store(uint64_t addr, uint64_t size, uint64_t value);
 
-    private:
     /// @brief Load 8 bits at address addr.
     /// @param addr
     /// @return 8 bit long value stored at addr as uin64_t.

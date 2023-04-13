@@ -1,4 +1,5 @@
 #include <_types/_uint8_t.h>
+
 #include <cstddef>
 #include <fstream>
 #include <iostream>
@@ -10,7 +11,6 @@
 #include "Machine.h"
 
 auto main(int argc, char* argv[]) -> int {
-
     if (argc < 2) {
         std::cout << "Usage: riscvemu file.bin" << '\n';
         return -1;
