@@ -1,7 +1,5 @@
 #include "Machine.h"
 
-#include <_types/_uint32_t.h>
-
 #include <cstdint>
 #include <iostream>
 
@@ -10,6 +8,17 @@
 namespace riscvemu {
 
 //=== MMU Methods Implementations ====//
+// MMU stores data in byte aligned Little Endian format.
+// e.g a single DWORD is laid out on byte alignment of four successive
+// entries, to read a DWORD at a given address we first compute the actual
+// address as [addr - BASE_ADDRESS] because the heap grows upwards.
+// Each k-th read is shifted by k * 8 to lift the bits to their MSB position.
+// After the shift the LSB's are zeroes, using OR we essentially replace
+// the zeroed-out bits in the right hand side by the bits in the left hand side
+// e.g our first read yields [11001100] our second read yields [01101110]
+// after a left shift by eight on the second read we end up with :
+//  [01101110 || 00000000] doing an OR with the previous read we end up with:
+//  [11001100] OR [01101110 || 00000000] = [01101110 || 11001100]
 
 // TODO: Typedef addr from uint64_t to avoid accidental swapping of arguments
 // here. see lint: bugprone-easily-swappable-parameters
@@ -31,15 +40,24 @@ auto MMU::load(uint64_t addr, uint64_t size) // NOLINT
   }
 }
 
+/// @brief Load a byte from memory.
+/// @param addr
+/// @return byte value represented as uint64_t.
 auto MMU::load8(uint64_t addr) -> uint64_t {
   return (uint64_t)this->memory[addr - MemoryBaseAddr];
 }
 
+/// @brief Load a WORD from memory.
+/// @param addr
+/// @return 2 byte value represented as uint64_t.
 auto MMU::load16(uint64_t addr) -> uint64_t {
   return (uint64_t)this->memory[addr - MemoryBaseAddr] |
          (uint64_t)this->memory[addr - MemoryBaseAddr + 1] << 8;
 }
 
+/// @brief Load a DWORD from memory.
+/// @param addr
+/// @return 4 byte value represented as uint64_t.
 auto MMU::load32(uint64_t addr) -> uint64_t {
   return (uint64_t)this->memory[addr - MemoryBaseAddr] |
          (uint64_t)this->memory[addr - MemoryBaseAddr + 1] << 8 |
@@ -47,6 +65,9 @@ auto MMU::load32(uint64_t addr) -> uint64_t {
          (uint64_t)this->memory[addr - MemoryBaseAddr + 3] << 24;
 }
 
+/// @brief Load a QWORD from meory.
+/// @param addr
+/// @return 8 byte value represented as uint64_t.
 auto MMU::load64(uint64_t addr) -> uint64_t {
   return (uint64_t)this->memory[addr - MemoryBaseAddr] |
          (uint64_t)this->memory[addr - MemoryBaseAddr + 1] << 8 |

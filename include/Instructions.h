@@ -1,7 +1,6 @@
 #ifndef INSTRUCTIONS_H
 #define INSTRUCTIONS_H
 
-#include <_types/_uint32_t.h>
 #include <cassert>
 #include <cstdint>
 #include <string>
