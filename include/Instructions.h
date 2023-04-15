@@ -66,7 +66,7 @@ struct Rtype {
 
 /// @brief Itype instructions.
 struct Itype {
-    int64_t Imm;
+    uint64_t Imm;
     Register Rs1;
     Register Rd;
     uint32_t Funct3;

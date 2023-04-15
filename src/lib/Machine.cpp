@@ -184,18 +184,17 @@ auto CPU::dumpRegisters() -> void {
 }
 
 auto CPU::execute(const Instruction& instruction) -> void {
-    printf("execute == OPCode : %x\n", instruction.opcode);
     switch (instruction.opcode) {
     case 0b0000011: {
         // Itype instruction.
         auto inst = Itype(instruction.instruction);
         auto rs1  = this->registers[(size_t)inst.Rs1];
-        auto imm  = inst.Imm;
+        auto imm  = (int64_t)inst.Imm;
 
         if (inst.Funct3 == 0b000) {
             // LB : load byte at the effective address [rs1] +  Imm into Rd.
-            auto addr  = rs1 + imm;
-            auto value = (int64_t)this->ctx->mmu.load(addr, 8);
+            uint64_t addr = (uint64_t)rs1 + (uint64_t)imm;
+            auto value    = (int64_t)((int8_t)this->ctx->mmu.load(addr, 8));
             this->setRegister(inst.Rd, value);
         } else if (inst.Funct3 == 0b001) {
             // LH: load halfword at the effective address [rs1] + Imm into Rd.
@@ -213,8 +212,14 @@ auto CPU::execute(const Instruction& instruction) -> void {
             auto value = (uint64_t)this->ctx->mmu.load(addr, 8);
             this->setRegister(inst.Rd, value);
         } else if (inst.Funct3 == 0b101) {
+            // LHU: load half word upper at the effective address
+            // [rs1] + Imm into Rd.
             auto addr  = rs1 + imm;
             auto value = (uint64_t)this->ctx->mmu.load(addr, 16);
+            this->setRegister(inst.Rd, value);
+        } else if (inst.Funct3 == 0b110) {
+            auto addr  = rs1 + imm;
+            auto value = (uint64_t)this->ctx->mmu.load(addr, 32);
             this->setRegister(inst.Rd, value);
         }
         break;
@@ -250,17 +255,21 @@ auto CPU::execute(const Instruction& instruction) -> void {
 
 void CPU::run() {
     this->registers[10] = 0xffff;
-    while (this->pc < (MemoryBaseAddr + 0xc)) {
+    auto count          = 0;
+    while (true) {
+        count += 1;
+        if (this->pc < MemoryBaseAddr ||
+            (MemoryBaseAddr + this->ctx->code.size()) <= this->pc) {
+            break;
+        }
+        if (count > 10000) {
+            break;
+        }
         auto nextInst = this->fetch();
-        printf("Next instruction: %x\n", nextInst);
-        auto inst = this->decode(nextInst);
-        printf("Opcode: %x | Instruction : %x\n", inst.opcode,
-               inst.instruction);
-        printf("Program counter : %zx\n", this->pc);
+        auto inst     = this->decode(nextInst);
         this->pc += 4;
         this->execute(inst);
 
-        printf("Program counter : %zx\n", this->pc);
         if (this->pc == 0 || inst.instruction == 1)
             break;
     }
