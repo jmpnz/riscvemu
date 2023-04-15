@@ -70,7 +70,7 @@ auto MMU::load8(uint64_t addr) -> uint64_t {
     return (uint64_t)this->memory[addr - MemoryBaseAddr];
 }
 
-/// @brief Load a WORD from memory.
+/// @brief Load a HALFWORD from memory.
 /// @param addr
 /// @return 2 byte value represented as uint64_t.
 auto MMU::load16(uint64_t addr) -> uint64_t {
@@ -78,7 +78,7 @@ auto MMU::load16(uint64_t addr) -> uint64_t {
            (uint64_t)this->memory[addr - MemoryBaseAddr + 1] << 8;
 }
 
-/// @brief Load a DWORD from memory.
+/// @brief Load a WORD from memory.
 /// @param addr
 /// @return 4 byte value represented as uint64_t.
 auto MMU::load32(uint64_t addr) -> uint64_t {
@@ -88,7 +88,7 @@ auto MMU::load32(uint64_t addr) -> uint64_t {
            (uint64_t)this->memory[addr - MemoryBaseAddr + 3] << 24;
 }
 
-/// @brief Load a QWORD from meory.
+/// @brief Load a DWORD from meory.
 /// @param addr
 /// @return 8 byte value represented as uint64_t.
 auto MMU::load64(uint64_t addr) -> uint64_t {
@@ -110,7 +110,7 @@ auto MMU::store8(uint64_t addr, uint64_t value) -> void {
     this->memory[addr - MemoryBaseAddr] = (uint8_t)(value & 0xFF);
 }
 
-/// @brief Store a WORD in memory.
+/// @brief Store a HALFWORD in memory.
 /// @param addr
 /// @param value
 /// @return
@@ -119,7 +119,7 @@ auto MMU::store16(uint64_t addr, uint64_t value) -> void {
     this->memory[addr - MemoryBaseAddr + 1] = (uint8_t)((value >> 8) & 0xFF);
 }
 
-/// @brief Store a DWORD in memory.
+/// @brief Store a WORD in memory.
 /// @param addr
 /// @param value
 /// @return
@@ -130,7 +130,7 @@ auto MMU::store32(uint64_t addr, uint64_t value) -> void {
     this->memory[addr - MemoryBaseAddr + 3] = (uint8_t)((value >> 24) & 0xFF);
 }
 
-/// @brief Store a QWORD in memory.
+/// @brief Store a DWORD in memory.
 /// @param addr
 /// @param value
 /// @return
@@ -143,6 +143,17 @@ auto MMU::store64(uint64_t addr, uint64_t value) -> void {
     this->memory[addr - MemoryBaseAddr + 5] = (uint8_t)((value >> 40) & 0xFF);
     this->memory[addr - MemoryBaseAddr + 6] = (uint8_t)((value >> 48) & 0xFF);
     this->memory[addr - MemoryBaseAddr + 7] = (uint8_t)((value >> 56) & 0xFF);
+}
+
+/// @brief Dump memory contents to stdout.
+/// @param
+/// @return
+auto MMU::dumpMemory() -> void {
+    for (size_t i = MemoryBaseAddr; i > 0; --i) {
+        printf("Memory[%zu] = %x\n", i, this->memory[i]);
+    }
+
+    printf("\n");
 }
 
 //==== CPU Methods Implementations ====//
@@ -165,7 +176,7 @@ auto CPU::setRegister(Register reg, uint64_t value) -> void {
     }
 }
 
-auto CPU::DumpRegisters() -> void {
+auto CPU::dumpRegisters() -> void {
     for (int i = 0; i < 32; i++) {
         printf("x[%d] = %llu\n", i, this->registers[i]);
     }
@@ -175,18 +186,47 @@ auto CPU::DumpRegisters() -> void {
 auto CPU::execute(const Instruction& instruction) -> void {
     printf("execute == OPCode : %x\n", instruction.opcode);
     switch (instruction.opcode) {
+    case 0b0000011: {
+        // Itype instruction.
+        auto inst = Itype(instruction.instruction);
+        auto rs1  = this->registers[(size_t)inst.Rs1];
+        auto imm  = inst.Imm;
+
+        if (inst.Funct3 == 0b000) {
+            // LB : load byte at the effective address [rs1] +  Imm into Rd.
+            auto addr  = rs1 + imm;
+            auto value = (int64_t)this->ctx->mmu.load(addr, 8);
+            this->setRegister(inst.Rd, value);
+        } else if (inst.Funct3 == 0b001) {
+            // LH: load halfword at the effective address [rs1] + Imm into Rd.
+            auto addr  = rs1 + imm;
+            auto value = (int64_t)this->ctx->mmu.load(addr, 16);
+            this->setRegister(inst.Rd, value);
+        } else if (inst.Funct3 == 0b010) {
+            // LW: load word at the effective address [rs1] + Imm into Rd.
+            auto addr  = rs1 + imm;
+            auto value = (int64_t)this->ctx->mmu.load(addr, 32);
+            this->setRegister(inst.Rd, value);
+        } else if (inst.Funct3 == 0b100) {
+            // LBU: load byte upper at the effective address [rs1] + Imm into Rd.
+            auto addr  = rs1 + imm;
+            auto value = (uint64_t)this->ctx->mmu.load(addr, 8);
+            this->setRegister(inst.Rd, value);
+        } else if (inst.Funct3 == 0b101) {
+            auto addr  = rs1 + imm;
+            auto value = (uint64_t)this->ctx->mmu.load(addr, 16);
+            this->setRegister(inst.Rd, value);
+        }
+        break;
+    }
     case 0b0110011: {
         auto inst    = Rtype(instruction.instruction);
         uint64_t rs1 = this->registers[(size_t)inst.Rs1];
         uint64_t rs2 = this->registers[(size_t)inst.Rs2];
 
-        std::cout << "Rs1 :" << (int)rs1 << "\nRs2 " << (int)rs2 << '\n';
-
         if (inst.Funct3 == 0b000 && inst.Funct7 == 0b0000000) {
             // ADD instruction
             this->setRegister(inst.Rd, rs1 + rs2);
-            std::cout << " Rd : " << this->registers[(size_t)inst.Rd]
-                      << std::endl;
         }
         break;
     }
@@ -194,15 +234,9 @@ auto CPU::execute(const Instruction& instruction) -> void {
         auto inst = Itype(instruction.instruction);
         auto rs1  = this->registers[(size_t)inst.Rs1];
         auto imm  = inst.Imm;
-        std::cout << "Imm : " << imm << '\n';
 
         if (inst.Funct3 == 0b000) {
-            std::cout << "Rs1 + Imm " << rs1 + imm << std::endl;
             this->setRegister(inst.Rd, rs1 + imm);
-
-            std::cout << "Rd : " << (size_t)inst.Rd
-                      << "\nRs1 : " << (size_t)inst.Rs1
-                      << "\n Imm :" << inst.Imm << '\n';
         }
         break;
     }
@@ -214,7 +248,8 @@ auto CPU::execute(const Instruction& instruction) -> void {
     }
 }
 
-void CPU::Run() {
+void CPU::run() {
+    this->registers[10] = 0xffff;
     while (this->pc < (MemoryBaseAddr + 0xc)) {
         auto nextInst = this->fetch();
         printf("Next instruction: %x\n", nextInst);
@@ -225,6 +260,7 @@ void CPU::Run() {
         this->pc += 4;
         this->execute(inst);
 
+        printf("Program counter : %zx\n", this->pc);
         if (this->pc == 0 || inst.instruction == 1)
             break;
     }

@@ -34,6 +34,9 @@ struct MMU {
     /// @return constant integer value MemoryMaxSize.
     static constexpr auto memorySize() -> int { return MemoryMaxSize; }
 
+    /// @brief Dump MMU contents starting from base address.
+    auto dumpMemory() -> void;
+
     /// @brief Load size number of bits at address addr, size must be within
     /// addressable range i.e (8, 16, 32, 64).
     /// @param addr
@@ -125,20 +128,10 @@ class CPU {
                     this->ctx->code.size());
     }
 
-    /// @brief Fetch and decode an instruction, and increment program counter.
-    auto FetchDecode() -> Instruction;
-
-    /// @brief Execute a single instruction.
-    auto Execute(uint32_t instruction) -> void;
-
-    /// @brief Dump register states.
-    auto DumpRegisters() -> void;
-
     /// @brief Run the CPU instance, asserts if memory is non-empty and has
     /// instructions.
-    auto Run() -> void;
+    auto run() -> void;
 
-    private:
     /// @brief Fetch instruction at current program counter.
     // this implies each n+1 read is shifted by 8 bytes.
     auto fetch() -> uint32_t;
@@ -152,6 +145,10 @@ class CPU {
     /// @brief Set register with value.
     auto setRegister(Register reg, uint64_t value) -> void;
 
+    /// @brief Dump register states.
+    auto dumpRegisters() -> void;
+
+    private:
     /// @brief  Program counter,
     /// TODO: maybe start at an actual offset in MMU ?
     offset_t pc = MemoryBaseAddr;

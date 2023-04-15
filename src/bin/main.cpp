@@ -27,9 +27,9 @@ auto main(int argc, char* argv[]) -> int {
     auto ctx = riscvemu::VMContext(buffer);
     auto cpu = riscvemu::CPU(ctx);
 
-    cpu.DumpRegisters();
+    cpu.dumpRegisters();
 
-    cpu.Run();
+    cpu.run();
 
-    cpu.DumpRegisters();
+    cpu.dumpRegisters();
 }
