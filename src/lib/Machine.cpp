@@ -1,6 +1,7 @@
 #include "Machine.h"
 
 #include <cstdint>
+#include <cstdio>
 #include <iostream>
 
 #include "Instructions.h"
@@ -20,144 +21,213 @@ namespace riscvemu {
 //  [01101110 || 00000000] doing an OR with the previous read we end up with:
 //  [11001100] OR [01101110 || 00000000] = [01101110 || 11001100]
 
+/// @brief Load size number of bytes from memory at the given address.
+/// @param addr Memory address.
+/// @param size Read of the size (must be aligned to 8, 16, 32 ,64).
+/// @return Memory contents at address cast as uint64_t.
 // TODO: Typedef addr from uint64_t to avoid accidental swapping of arguments
 // here. see lint: bugprone-easily-swappable-parameters
 auto MMU::load(uint64_t addr, uint64_t size) // NOLINT
     -> uint64_t {
-  switch (size) {
-  case 8:
-    return load8(addr);
-  case 16:
-    return load16(addr);
-  case 32:
-    return load32(addr);
-  case 64:
-    return load64(addr);
-  default: {
-    std::cerr << "Unaligned memory access error" << '\n';
-    return -1;
-  }
-  }
+    switch (size) {
+    case 8:
+        return load8(addr);
+    case 16:
+        return load16(addr);
+    case 32:
+        return load32(addr);
+    case 64:
+        return load64(addr);
+    default: {
+        std::cerr << "Unaligned memory access error" << '\n';
+        return -1;
+    }
+    }
+}
+
+/// @brief Store size number of bytes in memory at the given address.
+/// @param addr Memory address.
+/// @param size Read of the size (must be aligned to 8, 16, 32 ,64).
+/// @param value Value to store.
+/// @return void.
+auto MMU::store(uint64_t addr, uint64_t size, uint64_t value) -> void { //NOLINT
+    switch (size) {
+    case 8:
+        return store8(addr, value);
+    case 16:
+        return store16(addr, value);
+    case 32:
+        return store32(addr, value);
+    case 64:
+        return store64(addr, value);
+    }
 }
 
 /// @brief Load a byte from memory.
 /// @param addr
 /// @return byte value represented as uint64_t.
 auto MMU::load8(uint64_t addr) -> uint64_t {
-  return (uint64_t)this->memory[addr - MemoryBaseAddr];
+    return (uint64_t)this->memory[addr - MemoryBaseAddr];
 }
 
 /// @brief Load a WORD from memory.
 /// @param addr
 /// @return 2 byte value represented as uint64_t.
 auto MMU::load16(uint64_t addr) -> uint64_t {
-  return (uint64_t)this->memory[addr - MemoryBaseAddr] |
-         (uint64_t)this->memory[addr - MemoryBaseAddr + 1] << 8;
+    return (uint64_t)this->memory[addr - MemoryBaseAddr] |
+           (uint64_t)this->memory[addr - MemoryBaseAddr + 1] << 8;
 }
 
 /// @brief Load a DWORD from memory.
 /// @param addr
 /// @return 4 byte value represented as uint64_t.
 auto MMU::load32(uint64_t addr) -> uint64_t {
-  return (uint64_t)this->memory[addr - MemoryBaseAddr] |
-         (uint64_t)this->memory[addr - MemoryBaseAddr + 1] << 8 |
-         (uint64_t)this->memory[addr - MemoryBaseAddr + 2] << 16 |
-         (uint64_t)this->memory[addr - MemoryBaseAddr + 3] << 24;
+    return (uint64_t)this->memory[addr - MemoryBaseAddr] |
+           (uint64_t)this->memory[addr - MemoryBaseAddr + 1] << 8 |
+           (uint64_t)this->memory[addr - MemoryBaseAddr + 2] << 16 |
+           (uint64_t)this->memory[addr - MemoryBaseAddr + 3] << 24;
 }
 
 /// @brief Load a QWORD from meory.
 /// @param addr
 /// @return 8 byte value represented as uint64_t.
 auto MMU::load64(uint64_t addr) -> uint64_t {
-  return (uint64_t)this->memory[addr - MemoryBaseAddr] |
-         (uint64_t)this->memory[addr - MemoryBaseAddr + 1] << 8 |
-         (uint64_t)this->memory[addr - MemoryBaseAddr + 2] << 16 |
-         (uint64_t)this->memory[addr - MemoryBaseAddr + 3] << 24 |
-         (uint64_t)this->memory[addr - MemoryBaseAddr + 4] << 32 |
-         (uint64_t)this->memory[addr - MemoryBaseAddr + 5] << 40 |
-         (uint64_t)this->memory[addr - MemoryBaseAddr + 6] << 48 |
-         (uint64_t)this->memory[addr - MemoryBaseAddr + 7] << 56;
+    return (uint64_t)this->memory[addr - MemoryBaseAddr] |
+           (uint64_t)this->memory[addr - MemoryBaseAddr + 1] << 8 |
+           (uint64_t)this->memory[addr - MemoryBaseAddr + 2] << 16 |
+           (uint64_t)this->memory[addr - MemoryBaseAddr + 3] << 24 |
+           (uint64_t)this->memory[addr - MemoryBaseAddr + 4] << 32 |
+           (uint64_t)this->memory[addr - MemoryBaseAddr + 5] << 40 |
+           (uint64_t)this->memory[addr - MemoryBaseAddr + 6] << 48 |
+           (uint64_t)this->memory[addr - MemoryBaseAddr + 7] << 56;
+}
+
+/// @brief Store a byte in memory.
+/// @param addr
+/// @param value
+/// @return
+auto MMU::store8(uint64_t addr, uint64_t value) -> void {
+    this->memory[addr - MemoryBaseAddr] = (uint8_t)(value & 0xFF);
+}
+
+/// @brief Store a WORD in memory.
+/// @param addr
+/// @param value
+/// @return
+auto MMU::store16(uint64_t addr, uint64_t value) -> void {
+    this->memory[addr - MemoryBaseAddr]     = (uint8_t)(value & 0xFF);
+    this->memory[addr - MemoryBaseAddr + 1] = (uint8_t)((value >> 8) & 0xFF);
+}
+
+/// @brief Store a DWORD in memory.
+/// @param addr
+/// @param value
+/// @return
+auto MMU::store32(uint64_t addr, uint64_t value) -> void {
+    this->memory[addr - MemoryBaseAddr]     = (uint8_t)(value & 0xFF);
+    this->memory[addr - MemoryBaseAddr + 1] = (uint8_t)((value >> 8) & 0xFF);
+    this->memory[addr - MemoryBaseAddr + 2] = (uint8_t)((value >> 16) & 0xFF);
+    this->memory[addr - MemoryBaseAddr + 3] = (uint8_t)((value >> 24) & 0xFF);
+}
+
+/// @brief Store a QWORD in memory.
+/// @param addr
+/// @param value
+/// @return
+auto MMU::store64(uint64_t addr, uint64_t value) -> void {
+    this->memory[addr - MemoryBaseAddr]     = (uint8_t)(value & 0xFF);
+    this->memory[addr - MemoryBaseAddr + 1] = (uint8_t)((value >> 8) & 0xFF);
+    this->memory[addr - MemoryBaseAddr + 2] = (uint8_t)((value >> 16) & 0xFF);
+    this->memory[addr - MemoryBaseAddr + 3] = (uint8_t)((value >> 24) & 0xFF);
+    this->memory[addr - MemoryBaseAddr + 4] = (uint8_t)((value >> 32) & 0xFF);
+    this->memory[addr - MemoryBaseAddr + 5] = (uint8_t)((value >> 40) & 0xFF);
+    this->memory[addr - MemoryBaseAddr + 6] = (uint8_t)((value >> 48) & 0xFF);
+    this->memory[addr - MemoryBaseAddr + 7] = (uint8_t)((value >> 56) & 0xFF);
 }
 
 //==== CPU Methods Implementations ====//
 
 /// @brief Fetches the next instruction to execute stored @ pc.
 /// @return Returns the instruction in 32-bit format (encoded.)
-auto CPU::fetch() -> uint32_t {
-  // Fetch index of next instruction to execute in code.
-  auto index = this->pc;
-  // Instructions are encoded in Little Endian format
-  // We encode the instruction to its 32 bit format here.
-  uint32_t const r1 = this->ctx->code.at(index);
-  uint32_t const r2 = (this->ctx->code.at(index + 1) << 8);
-  uint32_t const r3 = (this->ctx->code.at(index + 2) << 16);
-  uint32_t const r4 = (this->ctx->code.at(index + 3) << 24);
+auto CPU::fetch() -> uint32_t { return this->ctx->mmu.load(this->pc, 32); }
 
-  return (r1 | r2 | r3 | r4);
+/// @brief Decode the fetched instruction to execute.
+auto CPU::decode(uint32_t instruction) -> Instruction {
+    // TODO: ideally we want instruction to hold a union
+    // of instruction types.
+    return Instruction{.opcode      = instruction & 0b1111111,
+                       .instruction = instruction};
 }
 
-auto CPU::GetPC() const -> uint64_t { return this->pc; }
+auto CPU::setRegister(Register reg, uint64_t value) -> void {
+    if (reg != Register::Zero) {
+        this->registers[(int)reg] = value;
+    }
+}
 
 auto CPU::DumpRegisters() -> void {
-  for (int i = 0; i < 32; i++) {
-    std::cout << "x" << i << " = [ " << this->registers[i] << " ] " << '\n';
-  }
-  std::cout << std::endl;
+    for (int i = 0; i < 32; i++) {
+        printf("x[%d] = %llu\n", i, this->registers[i]);
+    }
+    printf("\n");
 }
 
-void CPU::Execute(uint32_t inst) {
-  // Fetch next instruction.
-  // Can be wrapped in fetchDecode function and do both.
-  // auto instruction = this->decodeAtAddress(this->pc);
-  // return instruction;
-  // Execute instruction.
-  // Ideally either have execute be a giant
-  // swtich case or do some nifty design
-  // make it super simple at first.
-  // this->ctx->execute(instruction).
-  std::cout << "Executing Instruction: " << inst << " @ " << this->pc << '\n';
-  auto opcode = inst & 0x7f;
-  uint64_t const register_rd = ((inst >> 7) & 0x1f);
-  uint64_t const register_rs1 = ((inst >> 15) & 0x1f);
-  uint64_t const register_rs2 = ((inst >> 20) & 0x1f);
+auto CPU::execute(const Instruction& instruction) -> void {
+    printf("execute == OPCode : %x\n", instruction.opcode);
+    switch (instruction.opcode) {
+    case 0b0110011: {
+        auto inst    = Rtype(instruction.instruction);
+        uint64_t rs1 = this->registers[(size_t)inst.Rs1];
+        uint64_t rs2 = this->registers[(size_t)inst.Rs2];
 
-  std::cout << "Opcode :" << opcode << '\n';
+        std::cout << "Rs1 :" << (int)rs1 << "\nRs2 " << (int)rs2 << '\n';
 
-  switch (opcode) {
-  case 0x13: {
-    // addi
-    uint64_t const imm = (uint64_t(uint32_t((inst & 0xfff00000))) >> 20);
-    std::cout << "Register RD :" << register_rd
-              << " Contents :" << this->registers[register_rd] << '\n';
-    this->registers[register_rd] = (this->registers[register_rs1] + imm);
-    break;
-  }
-  case 0x33: {
-    // add
-    this->registers[register_rd] =
-        (this->registers[register_rs1] + this->registers[register_rs2]);
+        if (inst.Funct3 == 0b000 && inst.Funct7 == 0b0000000) {
+            // ADD instruction
+            this->setRegister(inst.Rd, rs1 + rs2);
+            std::cout << " Rd : " << this->registers[(size_t)inst.Rd]
+                      << std::endl;
+        }
+        break;
+    }
+    case 0b0010011: {
+        auto inst = Itype(instruction.instruction);
+        auto rs1  = this->registers[(size_t)inst.Rs1];
+        auto imm  = inst.Imm;
+        std::cout << "Imm : " << imm << '\n';
 
-    std::cout << "Register RD :" << register_rd
-              << " Contents :" << this->registers[register_rd] << '\n';
+        if (inst.Funct3 == 0b000) {
+            std::cout << "Rs1 + Imm " << rs1 + imm << std::endl;
+            this->setRegister(inst.Rd, rs1 + imm);
 
-    break;
-  }
-  default: {
-    std::cerr << "Unknown instruction " << opcode << '\n';
-    break;
-  }
-  }
+            std::cout << "Rd : " << (size_t)inst.Rd
+                      << "\nRs1 : " << (size_t)inst.Rs1
+                      << "\n Imm :" << inst.Imm << '\n';
+        }
+        break;
+    }
 
-  std::cout << "OPCode: " << opcode << " [RD] = " << register_rd
-            << " [RS1] = " << register_rs1 << '\n';
-};
+    default: {
+        printf("Unknown instruction : %x\n", instruction.instruction);
+        break;
+    }
+    }
+}
 
 void CPU::Run() {
-  while (this->pc < this->ctx->code.size()) {
-    auto inst = this->fetch();
-    this->pc += 4;
-    this->Execute(inst);
-  }
+    while (this->pc < (MemoryBaseAddr + 0xc)) {
+        auto nextInst = this->fetch();
+        printf("Next instruction: %x\n", nextInst);
+        auto inst = this->decode(nextInst);
+        printf("Opcode: %x | Instruction : %x\n", inst.opcode,
+               inst.instruction);
+        printf("Program counter : %zx\n", this->pc);
+        this->pc += 4;
+        this->execute(inst);
+
+        if (this->pc == 0 || inst.instruction == 1)
+            break;
+    }
 }
 
 } // namespace riscvemu

@@ -12,8 +12,8 @@
 
 namespace riscvemu {
 
-static constexpr int MemoryMaxSize  = 1024 * 1024;
-static constexpr int MemoryBaseAddr = 0x80000000;
+static constexpr int MemoryMaxSize       = 1024 * 1024 * 1;
+static constexpr uint64_t MemoryBaseAddr = 0x80000000;
 
 using offset_t = size_t;
 
@@ -21,25 +21,25 @@ using offset_t = size_t;
 /// translations for virtual memory.
 struct MMU {
     // Raw memory buffer.
-    uint8_t memory[MemoryMaxSize];
+    uint8_t memory[MemoryMaxSize]; //NOLINT
     // Used memory.
     size_t used;
 
     /// @brief Base address for the MMU, fixed constant see MemoryBaseAddr.
     /// @return constant integer value MemoryBaseAddr.
-    static constexpr int baseAddress() { return MemoryBaseAddr; }
+    static constexpr auto baseAddress() -> uint64_t { return MemoryBaseAddr; }
 
     /// @brief MMU max available unmapped memory, fixed constant see
     /// MemoryMaxSize.
     /// @return constant integer value MemoryMaxSize.
-    static constexpr int memorySize() { return MemoryMaxSize; }
+    static constexpr auto memorySize() -> int { return MemoryMaxSize; }
 
     /// @brief Load size number of bits at address addr, size must be within
     /// addressable range i.e (8, 16, 32, 64).
     /// @param addr
     /// @param size
     /// @return size number of bits stored at address addr.
-    uint64_t load(uint64_t addr, uint64_t size);
+    auto load(uint64_t addr, uint64_t size) -> uint64_t;
 
     /// @brief Store size number of bits in value at address addr, size must be
     /// within addressable range i.e (8, 16, 32, 64).
@@ -51,22 +51,22 @@ struct MMU {
     /// @brief Load 8 bits at address addr.
     /// @param addr
     /// @return 8 bit long value stored at addr as uin64_t.
-    uint64_t load8(uint64_t addr);
+    auto load8(uint64_t addr) -> uint64_t;
 
     /// @brief Load 16 bits at address addr.
     /// @param addr
     /// @return 16 bit long value stored at addr as uin64_t
-    uint64_t load16(uint64_t addr);
+    auto load16(uint64_t addr) -> uint64_t;
 
     /// @brief Load 32 bits at address addr.
     /// @param addr
     /// @return 32 bit long value stored at addr as uin64_t
-    uint64_t load32(uint64_t addr);
+    auto load32(uint64_t addr) -> uint64_t;
 
     /// @brief Load 64 bits at address addr.
     /// @param addr
     /// @return 64 bit long value stored at addr as uin64_t
-    uint64_t load64(uint64_t addr);
+    auto load64(uint64_t addr) -> uint64_t;
 
     /// @brief Store 8 bit value at address addr.
     /// @param addr
@@ -93,8 +93,13 @@ struct MMU {
 /// of it as thread spaces, used for context switching and interrupt
 /// handling.
 // VMContext stores the code executing in a context.
+// TODO: get rid of VMContext until we figure out multithreaded
+// execution.
 struct VMContext {
     std::vector<uint8_t> code;
+
+    /// @brief MMU for CPU execution.
+    MMU mmu;
 
     /// @brief VMContext constructor.
     VMContext(std::vector<uint8_t> code) : code(std::move(code)) {}
@@ -108,7 +113,17 @@ class CPU {
 
     public:
     /// @brief CPU instance constructor.
-    CPU(VMContext ctx) : ctx(std::make_unique<VMContext>(std::move(ctx))) {}
+    CPU(VMContext ctx) : ctx(std::make_unique<VMContext>(std::move(ctx))) {
+        // Register x0 is always hardwired to 0.
+        this->registers[0] = 0x00;
+        /// Register x2 is used as the stack pointer by the ABI.
+        this->registers[2] = MemoryBaseAddr + MemoryMaxSize;
+        /// Program counter is set to the base memory address.
+        this->pc = MemoryBaseAddr;
+        /// Move code to MMU.
+        std::memcpy(&this->ctx->mmu.memory, this->ctx->code.data(),
+                    this->ctx->code.size());
+    }
 
     /// @brief Fetch and decode an instruction, and increment program counter.
     auto FetchDecode() -> Instruction;
@@ -123,25 +138,25 @@ class CPU {
     /// instructions.
     auto Run() -> void;
 
-    /// @brief Returns the current program counter.
-    auto GetPC() const -> uint64_t;
-
     private:
     /// @brief Fetch instruction at current program counter.
     // this implies each n+1 read is shifted by 8 bytes.
     auto fetch() -> uint32_t;
 
     /// @brief Decode an encoded instruction.
-    auto decode(uint32_t instruction) -> Instruction;
+    auto static decode(uint32_t instruction) -> Instruction;
 
-    /// @brief Execurte an instruction.
+    /// @brief Execute an instruction.
     auto execute(const Instruction& inst) -> void;
+
+    /// @brief Set register with value.
+    auto setRegister(Register reg, uint64_t value) -> void;
 
     /// @brief  Program counter,
     /// TODO: maybe start at an actual offset in MMU ?
-    offset_t pc = 0;
+    offset_t pc = MemoryBaseAddr;
     /// @brief Registers.
-    std::array<uint32_t, 32> registers;
+    std::array<uint64_t, 32> registers;
 
     /// @brief CPU instance contexts.
     std::unique_ptr<VMContext> ctx;
