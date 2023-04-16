@@ -92,17 +92,17 @@ enum class OPCode {
     BGEU = 0b1100011,
 
     // Load opcodes.
-    LOAD = 0000011,
+    LOAD = 0b0000011,
     // Load byte.
-    LB = 0000011,
+    LB = 0b0000011,
     // Load half word.
-    LH = 0000011,
+    LH = 0b0000011,
     // Load word.
-    LW = 0000011,
+    LW = 0b0000011,
     // Load byte upper.
-    LBU = 0000011,
+    LBU = 0b0000011,
     // Load half word upper.
-    LHU = 0000011,
+    LHU = 0b0000011,
 
     // Store opcodes.
     STORE = 0b0100011,
