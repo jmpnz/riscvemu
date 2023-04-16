@@ -12,6 +12,7 @@ Checks: >
   readability-*,
   -bugprone-exception-escape,
   -bugprone-signed-char-misuse,
+  -bugprone-easily-swappable-parameters,
   -misc-unused-parameters,
   -misc-non-private-member-variables-in-classes,
   -readability-identifier-naming,
