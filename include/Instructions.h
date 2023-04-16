@@ -102,9 +102,9 @@ struct Stype {
   /// @brief Construction takes an encoded instruction
   /// and unpacks the component.
   Stype(uint32_t inst) {
-    uint32_t imm40 = (inst >> 7) & 0b11111;
-    uint32_t imm115 = (inst >> 25) & 0b1111111;
-    uint32_t imm = (imm115 << 5) | imm40;
+    uint32_t const imm40 = (inst >> 7) & 0b11111;
+    uint32_t const imm115 = (inst >> 25) & 0b1111111;
+    uint32_t const imm = (imm115 << 5) | imm40;
     Imm = ((int32_t)imm << 20) >> 20;
     Rs2 = Register((inst >> 20) & 0b11111);
     Rs1 = Register((inst >> 15) & 0b11111);
@@ -120,11 +120,11 @@ struct Jtype {
   /// @brief Construction takes an encoded instruction
   /// and unpacks the components.
   Jtype(uint32_t inst) {
-    uint32_t imm20 = (inst >> 31) & 1;
-    uint32_t imm101 = (inst >> 21) & 0b1111111111;
-    uint32_t imm11 = (inst >> 20) & 1;
-    uint32_t imm1912 = (inst >> 12) & 0b11111111;
-    uint32_t imm =
+    uint32_t const imm20 = (inst >> 31) & 1;
+    uint32_t const imm101 = (inst >> 21) & 0b1111111111;
+    uint32_t const imm11 = (inst >> 20) & 1;
+    uint32_t const imm1912 = (inst >> 12) & 0b11111111;
+    uint32_t const imm =
         (imm20 << 20) | (imm1912 << 12) | (imm11 << 11) | (imm101 << 1);
 
     Imm = ((int32_t)imm << 11) >> 11;
@@ -142,12 +142,13 @@ struct Btype {
   /// @brief Construction takes an encoded instruction
   /// and unpacks the components.
   Btype(uint32_t inst) {
-    uint32_t imm12 = (inst >> 31) & 1;
-    uint32_t imm105 = (inst >> 25) & 0b111111;
-    uint32_t imm41 = (inst >> 8) & 0b1111;
-    uint32_t imm11 = (inst >> 7) & 1;
+    uint32_t const imm12 = (inst >> 31) & 1;
+    uint32_t const imm105 = (inst >> 25) & 0b111111;
+    uint32_t const imm41 = (inst >> 8) & 0b1111;
+    uint32_t const imm11 = (inst >> 7) & 1;
 
-    uint32_t imm = (imm12 << 12) | (imm11 << 11) | (imm105 << 5) | (imm41 << 1);
+    uint32_t const imm =
+        (imm12 << 12) | (imm11 << 11) | (imm105 << 5) | (imm41 << 1);
 
     Imm = (((int32_t)imm) << 19) >> 19;
     Rs2 = Register((inst >> 20) & 0b11111);
