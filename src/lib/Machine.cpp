@@ -173,7 +173,7 @@ auto CPU::fetch() -> uint32_t { return this->ctx->mmu.load(this->pc, 32); }
 auto CPU::decode(uint32_t instruction) -> Instruction {
     // TODO: ideally we want instruction to hold a union
     // of instruction types.
-    return Instruction{.opcode      = instruction & 0b1111111,
+    return Instruction{.opcode      = OPCode(instruction & 0b1111111),
                        .instruction = instruction};
 }
 
@@ -216,7 +216,7 @@ auto CPU::dumpRegisters() -> void {
 
 auto CPU::execute(const Instruction& instruction) -> void {
     switch (instruction.opcode) {
-    case 0b0110111: {
+    case OPCode::LUI: {
         // Utype instruction (LUI).
         auto inst = Utype(instruction.instruction);
         auto rd   = inst.Rd;
@@ -228,7 +228,7 @@ auto CPU::execute(const Instruction& instruction) -> void {
         this->setRegister(rd, value);
         break;
     }
-    case 0b0010111: {
+    case OPCode::AUIPC: {
         // Utype instruction (AUIPC).
         auto inst = Utype(instruction.instruction);
         auto rd   = inst.Rd;
@@ -239,18 +239,19 @@ auto CPU::execute(const Instruction& instruction) -> void {
         this->setRegister(rd, offset);
         break;
     }
-    case 0b1101111: {
+    case OPCode::JAL: {
         // Jtype instrtuction (JAL)
         auto inst = Jtype(instruction.instruction);
         auto rd   = inst.Rd;
         auto imm  = inst.Imm;
+        printf("Instruction bits :%x\n", instruction.instruction);
         // JAL: jump and link
         this->setRegister(rd, this->pc);
         this->pc = this->pc + (int64_t)imm - 4;
         // TODO: raise Misaligned exception if address is misaligned
         break;
     }
-    case 0b1100111: {
+    case OPCode::JALR: {
         // Itype instruction (JALR)
         auto inst = Itype(instruction.instruction);
         auto rd   = inst.Rd;
@@ -263,7 +264,7 @@ auto CPU::execute(const Instruction& instruction) -> void {
         // TODO: raise Misaligned exception if address is misaligned
         break;
     }
-    case 0b0000011: {
+    case OPCode::LOAD: {
         // Itype instruction.
         auto inst = Itype(instruction.instruction);
         auto rs1  = this->registers[(size_t)inst.Rs1];
@@ -311,7 +312,7 @@ auto CPU::execute(const Instruction& instruction) -> void {
         }
         break;
     }
-    case 0b0100011: {
+    case OPCode::STORE: {
         // Stype instruction.
         auto inst  = Stype(instruction.instruction);
         auto imm   = inst.Imm;
@@ -345,7 +346,7 @@ auto CPU::execute(const Instruction& instruction) -> void {
         }
         break;
     }
-    case 0b0110011: {
+    case OPCode::ARITHR: {
         auto inst = Rtype(instruction.instruction);
         auto rs1  = this->registers[(size_t)inst.Rs1];
         auto rs2  = this->registers[(size_t)inst.Rs2];
@@ -356,7 +357,7 @@ auto CPU::execute(const Instruction& instruction) -> void {
         }
         break;
     }
-    case 0b0010011: {
+    case OPCode::ARITHI: {
         auto inst = Itype(instruction.instruction);
         auto rs1  = this->registers[(size_t)inst.Rs1];
         auto imm  = inst.Imm;

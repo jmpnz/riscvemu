@@ -153,13 +153,4 @@ auto getRegisterFromIndex(uint64_t idx) -> Register {
     }
 }
 
-auto Instruction::ToString() const -> std::string {
-    switch (this->opcode) {
-    case 0xFF:
-        return "OPCODE: 0xFF";
-    default:
-        return "Unknown instruction";
-    }
-}
-
 } // namespace riscvemu

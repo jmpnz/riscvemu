@@ -56,6 +56,157 @@ auto getRegisterFromIndex(uint64_t idx) -> Register;
 /// @return const char*
 auto getRegisterABIName(Register r) -> const char*;
 
+/// @brief OPCode enum represents each OPCode enum with its binary
+/// representation. For readability we list all instructions within
+///  For readability we list all instructions within
+///  an opcode group.
+enum class OPCode {
+
+    /// The following are the opcodes for the base RV32 ISA.
+
+    // Load Upper Immediate.
+    LUI = 0b0110111,
+    // Add Upper immediate to PC.
+    AUIPC = 0b0010111,
+
+    // Unconditional jumps opcodes.
+
+    // Jump And Link.
+    JAL = 0b1101111,
+    // Jump And Link Register.
+    JALR = 0b1100111,
+
+    // Conditional branch opcodes.
+    BRANCH = 0b1100011,
+    // Branch if Equal.
+    BEQ = 0b1100011,
+    // Branch if Not Equal.
+    BNE = 0b1100011,
+    // Branch if Less Than.
+    BLT = 0b1100011,
+    // Branch if Greater than or Equal.
+    BGE = 0b1100011,
+    // Branch if Less Than Upper.
+    BLTU = 0b1100011,
+    // Branch if Greater than or Equal Upper.
+    BGEU = 0b1100011,
+
+    // Load opcodes.
+    LOAD = 0000011,
+    // Load byte.
+    LB = 0000011,
+    // Load half word.
+    LH = 0000011,
+    // Load word.
+    LW = 0000011,
+    // Load byte upper.
+    LBU = 0000011,
+    // Load half word upper.
+    LHU = 0000011,
+
+    // Store opcodes.
+    STORE = 0b0100011,
+    // Store byte,
+    SB = 0b0100011,
+    // Store half word.
+    SH = 0b0100011,
+    // Store word.
+    SW = 0b0100011,
+
+    // Arithmetic immediate operations.
+    ARITHI = 0b0010011,
+    // Add Immediate.
+    ADDI = 0b0010011,
+    // Set Less Than Immediate.
+    SLTI = 0b0010011,
+    // Set Less Than Immediate Upper.
+    SLTIU = 0b0010011,
+    // Xor Immediate.
+    XORI = 0b0010011,
+    // Or Immediate.
+    ORI = 0b0010011,
+    // And Immedaite
+    ANDI = 0b0010011,
+    // Shift Logical Left Immediate.
+    SLLI = 0b0010011,
+    // Shift Logical Right Immediate.
+    SRLI = 0b0010011,
+    // Shift Right Arithmetic
+    SRAI = 0b0010011,
+
+    // Arithmetic register to register operations.
+    ARITHR = 0b0110011,
+    // Add
+    ADD = 0b0110011,
+    // Sub
+    SUB = 0b0110011,
+    // Shift Logical Left.
+    SLL = 0b0110011,
+    // Set Less Than
+    SLT = 0b0110011,
+    // Set Less Than Upper
+    SLTU = 0b0110011,
+    // XOR
+    XOR = 0b0110011,
+    // Shift Logical Right.
+    SRL = 0b0110011,
+    // Shift Arithmetic Right.
+    SRA = 0b0110011,
+    // OR
+    OR = 0b0110011,
+    // AND
+    AND = 0b0110011,
+
+    // Memory ordering
+
+    // Fence instruction.
+    FENCE = 0b0001111,
+
+    // Environment calls and breakpoints, system instructions used
+    // to access system functionality that might require priviliegd
+    // access.
+    // ECALL
+    ECALL  = 0b1110011,
+    EBREAK = 0b1110011,
+
+    /// @brief the following are the extended base instructions for RV64I
+
+    // Load operations opcodes.
+
+    // Load Word Upper
+    LWU = 0b0000011,
+    // Load Double Word.
+    LD = 0b0000011,
+
+    // Store operations opcodes.
+    // Store double.
+    SD = 0b0100011,
+
+    // Arithemtic immediate operations.
+    ARITHIW = 0b0011011,
+    // Add Immediate Wide
+    ADDIW = 0b0011011,
+    // SSLI  Wide
+    SLLIW = 0b0011011,
+    // SRLI  Wide
+    SRLIW = 0b0011011,
+    // SRAI Immediate Wide
+    SRAIW = 0b0011011,
+
+    // Arithmetic register to register operations.
+    ARITHRW = 0b0111011,
+    // ADD Wide
+    ADDW = 0b0111011,
+    // SUB Wide
+    SUBW = 0b0111011,
+    // SLL Wide
+    SLLW = 0b0111011,
+    // SRL Wide
+    SRLW = 0b0111011,
+    // SRA Wide
+    SRAW = 0b0111011,
+};
+
 /// @brief Rtype instructions.
 struct Rtype {
     uint32_t Funct7;
@@ -177,7 +328,7 @@ struct Utype {
 /// Instruction simply wraps the bits of an encoded instruction, during
 /// the decode cycle the instruction is transformed to its appropiate type.
 struct Instruction {
-    uint32_t opcode;
+    OPCode opcode;
     uint32_t instruction;
 
     /// Following C++ Guidelines and from intuition we know
