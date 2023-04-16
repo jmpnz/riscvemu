@@ -8,7 +8,7 @@
  -> idea: Wrap emulator in DebugContext with forward() and backward() ?
   maybe debug our own emulator in an emulator :monocle: how nice is that.
 
-[ ] Add MMU/DRAM support and ensure riscv-tests run.
+[x] Add MMU/DRAM support and ensure riscv-tests run.
 [ ] Figure out Linking details from Chapter 7 in CS:APP
     * Do we need -fPIC ?
 
@@ -19,7 +19,5 @@
 [ ] Define a debug mode in `riscvemu::Emulator` to introspect CPU state.
 
 [ ] Check timdbg blogposts, maybe write a time travel debugger (for fun lol)
-
-[ ] Watch @gamozolabs stream on riscv_emus
 
 [ ] Read lldb docs

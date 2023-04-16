@@ -15,35 +15,46 @@ enum class Register {
     Sp,   // x2 is used as the stack pointer
     Gp,   // Global pointer
     Tp,   // Thread pointer
-    T0,
-    T1,
-    T2,
-    S0,
-    S1,
-    A0,
-    A1,
-    A2,
-    A3,
-    A4,
-    A5,
-    A6,
-    A7,
-    S2,
-    S3,
-    S4,
-    S5,
-    S6,
-    S7,
-    S8,
-    S9,
-    S10,
-    S11,
-    T3,
-    T4,
-    T5,
-    T6,
-    Pc,
+    T0,   // Temporary
+    T1,   // Temporary T1
+    T2,   // Temporary T2
+    S0,   // Saved register (frame pointer)
+    S1,   // Saved register
+    A0,   // Function arguments / Return values
+    A1,   // Function arguments
+    A2,   // Function arguments
+    A3,   // Function arguments
+    A4,   // Function arguments
+    A5,   // Function arguments
+    A6,   // Function arguments
+    A7,   // Function arguments
+    S2,   // Saved registers
+    S3,   // Saved registers
+    S4,   // Saved registers
+    S5,   // Saved registers
+    S6,   // Saved registers
+    S7,   // Saved registers
+    S8,   // Saved registers
+    S9,   // Saved registers
+    S10,  // Saved registers
+    S11,  // Saved registers
+    T3,   // Temporary T3
+    T4,   // Temporary T4
+    T5,   // Temporary T5
+    T6,   // Temporary T6
+    Pc,   // Program counter  (not explicitely declared)
+    Unknown,
 };
+
+/// @brief Return typed Register value from register index.
+/// @param idx
+/// @return Register (ABI) corresponding to index.
+auto getRegisterFromIndex(uint64_t idx) -> Register;
+
+/// @brief Returns ABI name of register as a string
+/// @param r
+/// @return const char*
+auto getRegisterABIName(Register r) -> const char*;
 
 /// @brief Rtype instructions.
 struct Rtype {

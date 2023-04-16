@@ -29,6 +29,7 @@ namespace riscvemu {
 // here. see lint: bugprone-easily-swappable-parameters
 auto MMU::load(uint64_t addr, uint64_t size) // NOLINT
     -> uint64_t {
+    assert(addr >= MemoryBaseAddr && addr <= MemoryEndAddr);
     switch (size) {
     case 8:
         return load8(addr);
@@ -50,7 +51,9 @@ auto MMU::load(uint64_t addr, uint64_t size) // NOLINT
 /// @param size Read of the size (must be aligned to 8, 16, 32 ,64).
 /// @param value Value to store.
 /// @return void.
-auto MMU::store(uint64_t addr, uint64_t size, uint64_t value) -> void { //NOLINT
+auto MMU::store(uint64_t addr, uint64_t size, uint64_t value)
+    -> void { // NOLINT
+    assert(addr >= MemoryBaseAddr && addr <= MemoryEndAddr);
     switch (size) {
     case 8:
         return store8(addr, value);
@@ -67,6 +70,8 @@ auto MMU::store(uint64_t addr, uint64_t size, uint64_t value) -> void { //NOLINT
 /// @param addr
 /// @return byte value represented as uint64_t.
 auto MMU::load8(uint64_t addr) -> uint64_t {
+    printf("Address to access : %llx\n", addr);
+    printf("Memory address access : %llx\n", addr - MemoryBaseAddr);
     return (uint64_t)this->memory[addr - MemoryBaseAddr];
 }
 
@@ -172,13 +177,15 @@ auto CPU::decode(uint32_t instruction) -> Instruction {
 
 auto CPU::setRegister(Register reg, uint64_t value) -> void {
     if (reg != Register::Zero) {
-        this->registers[(int)reg] = value;
+        this->registers[(size_t)reg] = value;
     }
 }
 
 auto CPU::dumpRegisters() -> void {
     for (int i = 0; i < 32; i++) {
-        printf("x[%d] = %llu\n", i, this->registers[i]);
+        Register const reg = getRegisterFromIndex(i);
+        printf("x[%d]/%s  =  0x%llx\n", i, getRegisterABIName(reg),
+               this->registers[i]);
     }
     printf("\n");
 }
@@ -192,42 +199,85 @@ auto CPU::execute(const Instruction& instruction) -> void {
         auto imm  = (int64_t)inst.Imm;
 
         if (inst.Funct3 == 0b000) {
-            // LB : load byte at the effective address [rs1] +  Imm into Rd.
-            uint64_t addr = (uint64_t)rs1 + (uint64_t)imm;
-            auto value    = (int64_t)((int8_t)this->ctx->mmu.load(addr, 8));
+            // LB : load byte at the effective address [rs1] +  Imm and sign into Rd.
+            uint64_t const addr = (uint64_t)rs1 + (uint64_t)imm;
+            printf("Load byte at adress : %llx\n", addr);
+            auto value = (int64_t)((int8_t)this->ctx->mmu.load(addr, 8));
             this->setRegister(inst.Rd, value);
         } else if (inst.Funct3 == 0b001) {
-            // LH: load halfword at the effective address [rs1] + Imm into Rd.
+            // LH: load halfword at the effective address [rs1] + Imm and sign extend
+            // into Rd.
             auto addr  = rs1 + imm;
-            auto value = (int64_t)this->ctx->mmu.load(addr, 16);
+            auto value = (int64_t)(int64_t)this->ctx->mmu.load(addr, 16);
             this->setRegister(inst.Rd, value);
         } else if (inst.Funct3 == 0b010) {
-            // LW: load word at the effective address [rs1] + Imm into Rd.
+            // LW: load word at the effective address [rs1] + Imm and sign extend
+            // into Rd.
             auto addr  = rs1 + imm;
             auto value = (int64_t)this->ctx->mmu.load(addr, 32);
             this->setRegister(inst.Rd, value);
         } else if (inst.Funct3 == 0b100) {
-            // LBU: load byte upper at the effective address [rs1] + Imm into Rd.
+            // LBU: load byte unsigned at the effective address [rs1] + Imm into Rd.
             auto addr  = rs1 + imm;
-            auto value = (uint64_t)this->ctx->mmu.load(addr, 8);
+            auto value = this->ctx->mmu.load(addr, 8);
             this->setRegister(inst.Rd, value);
         } else if (inst.Funct3 == 0b101) {
-            // LHU: load half word upper at the effective address
+            // LHU (RV64i): load half word unsigned at the effective address
             // [rs1] + Imm into Rd.
             auto addr  = rs1 + imm;
-            auto value = (uint64_t)this->ctx->mmu.load(addr, 16);
+            auto value = this->ctx->mmu.load(addr, 16);
             this->setRegister(inst.Rd, value);
         } else if (inst.Funct3 == 0b110) {
+            // LWU: load word unsigned at the effective address [rs1] + Imm into Rd.
             auto addr  = rs1 + imm;
-            auto value = (uint64_t)this->ctx->mmu.load(addr, 32);
+            auto value = this->ctx->mmu.load(addr, 32);
+            this->setRegister(inst.Rd, value);
+        } else if (inst.Funct3 == 0b011) {
+            // LD: Load double word unsigned at the effective address [rs1] + Imm
+            // into Rd.
+            auto addr  = rs1 + imm;
+            auto value = this->ctx->mmu.load(addr, 64);
             this->setRegister(inst.Rd, value);
         }
         break;
     }
+    case 0b0100011: {
+        // Stype instruction.
+        auto inst = Stype(instruction.instruction);
+        auto imm  = inst.Imm;
+        auto rs1  = inst.Rs1;
+        auto rs2  = inst.Rs2;
+        auto addr = this->registers[(size_t)rs1] + (uint64_t)imm;
+
+        if (inst.Funct3 == 0b000) {
+            // SB: Store byte at address.
+            printf("Store @ %llx : %llu", this->registers[(size_t)rs2], addr);
+            this->ctx->mmu.store(addr, 8, this->registers[(size_t)rs2]);
+        }
+        if (inst.Funct3 == 0b001) {
+            // SH: Store half word at address.
+            printf("Store @ %llx : %llu", this->registers[(size_t)rs2], addr);
+            this->ctx->mmu.store(addr, 16, this->registers[(size_t)rs2]);
+            printf("Memory @ %llx : %llu", addr, this->ctx->mmu.load16(addr));
+        }
+        if (inst.Funct3 == 0b010) {
+            // SW: Store word at address.
+            printf("Store value %llx @ %llx", this->registers[(size_t)rs2],
+                   addr - MemoryBaseAddr);
+            this->ctx->mmu.store(addr, 32, this->registers[(size_t)rs2]);
+            printf("Memory @ %llx : %llu", addr, this->ctx->mmu.load32(addr));
+        }
+        if (inst.Funct3 == 0b011) {
+            // SD: Store double word at address.
+            printf("Store @ %llx : %llu", this->registers[(size_t)rs2], addr);
+            this->ctx->mmu.store(addr, 64, this->registers[(size_t)rs2]);
+        }
+        break;
+    }
     case 0b0110011: {
-        auto inst    = Rtype(instruction.instruction);
-        uint64_t rs1 = this->registers[(size_t)inst.Rs1];
-        uint64_t rs2 = this->registers[(size_t)inst.Rs2];
+        auto inst = Rtype(instruction.instruction);
+        auto rs1  = this->registers[(size_t)inst.Rs1];
+        auto rs2  = this->registers[(size_t)inst.Rs2];
 
         if (inst.Funct3 == 0b000 && inst.Funct7 == 0b0000000) {
             // ADD instruction
@@ -254,8 +304,7 @@ auto CPU::execute(const Instruction& instruction) -> void {
 }
 
 void CPU::run() {
-    this->registers[10] = 0xffff;
-    auto count          = 0;
+    auto count = 0;
     while (true) {
         count += 1;
         if (this->pc < MemoryBaseAddr ||
@@ -268,7 +317,11 @@ void CPU::run() {
         auto nextInst = this->fetch();
         auto inst     = this->decode(nextInst);
         this->pc += 4;
+        printf("==== PRE-EXECUTE ====\n");
+        this->dumpRegisters();
         this->execute(inst);
+        printf("==== POST-EXECUTE ====\n");
+        this->dumpRegisters();
 
         if (this->pc == 0 || inst.instruction == 1)
             break;

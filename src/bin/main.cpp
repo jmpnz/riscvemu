@@ -24,6 +24,7 @@ auto main(int argc, char* argv[]) -> int {
     std::ifstream input(argv[1], std::ios::binary);
     std::vector<uint8_t> const buffer(std::istreambuf_iterator<char>(input),
                                       {});
+    printf("Buffer size : %zu\n", buffer.size());
     auto ctx = riscvemu::VMContext(buffer);
     auto cpu = riscvemu::CPU(ctx);
 

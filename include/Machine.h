@@ -3,6 +3,7 @@
 
 #include "Instructions.h"
 
+#include <cstddef>
 #include <cstdint>
 
 #include <array>
@@ -12,8 +13,10 @@
 
 namespace riscvemu {
 
-static constexpr int MemoryMaxSize       = 1024 * 1024 * 1;
+static constexpr uint64_t MemoryMaxSize =
+    (static_cast<const uint64_t>(1024 * 1024 * 128));
 static constexpr uint64_t MemoryBaseAddr = 0x80000000;
+static constexpr uint64_t MemoryEndAddr  = MemoryBaseAddr + MemoryBaseAddr - 1;
 
 using offset_t = size_t;
 
@@ -21,7 +24,7 @@ using offset_t = size_t;
 /// translations for virtual memory.
 struct MMU {
     // Raw memory buffer.
-    uint8_t memory[MemoryMaxSize]; //NOLINT
+    std::vector<uint8_t> memory; // NOLINT
     // Used memory.
     size_t used;
 
@@ -33,6 +36,8 @@ struct MMU {
     /// MemoryMaxSize.
     /// @return constant integer value MemoryMaxSize.
     static constexpr auto memorySize() -> int { return MemoryMaxSize; }
+
+    MMU() : memory(MemoryMaxSize) {}
 
     /// @brief Dump MMU contents starting from base address.
     auto dumpMemory() -> void;
@@ -113,7 +118,6 @@ struct VMContext {
 /// CPU owns MMU exclusively, any simulated threading is done at the context
 /// level.
 class CPU {
-
     public:
     /// @brief CPU instance constructor.
     CPU(VMContext ctx) : ctx(std::make_unique<VMContext>(std::move(ctx))) {
@@ -124,7 +128,7 @@ class CPU {
         /// Program counter is set to the base memory address.
         this->pc = MemoryBaseAddr;
         /// Move code to MMU.
-        std::memcpy(&this->ctx->mmu.memory, this->ctx->code.data(),
+        std::memcpy(this->ctx->mmu.memory.data(), this->ctx->code.data(),
                     this->ctx->code.size());
     }
 
