@@ -52,7 +52,7 @@ For each instruction format the binary layout (how instructions are encoded) is 
 The first line describes the bit index, since all instructions are 32 bit wide offsets are
 in the range [0..31].
 
-Note: To keep the ASCII diagram nice and cleann we omit Imm where it's not required e.g
+Note: To keep the ASCII diagram nice and clean we omit **Imm** where it's not required e.g
 for B type instruction [4:1|11]] is synonymous to Imm[4:1] Imm[11] the bit right after
 the opcode is the 11th bit of the immediate value, with [4:1] representing bits 1 to 4.
 
@@ -107,7 +107,7 @@ before we start decoding we need to flip the above bits
 
 ```
 
-`addw` by definition stores the sum of `rs1` and rs2` in `rd` you'll notice that `rd`
+`addw` by definition stores the sum of `rs1` and `rs2` in `rd` you'll notice that `rd`
 has the same bit value as `rs1` and this is because we store the result back into `rs1`.
 
 In assembly and using the RISC-V ABI this would be written as `addw a0, a0 ,a1` the ABi
