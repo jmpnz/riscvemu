@@ -18,5 +18,5 @@ $ ninja all
 
 ## Style
 
-Use Google's style guide for C++ code and follow some of the advice from the LLVM style guide.
+Use LLVM's style guide for C++ code (unlike LLVM code we allow exceptions).
 
