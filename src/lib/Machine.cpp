@@ -1,10 +1,8 @@
 #include "Machine.h"
 
-#include <_types/_uint64_t.h>
 #include <cstdint>
 #include <cstdio>
 #include <iostream>
-#include <sys/_types/_int64_t.h>
 
 #include "Instructions.h"
 
