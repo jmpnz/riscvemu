@@ -1,4 +1,5 @@
 #include <cstddef>
+#include <cstdio>
 #include <fstream>
 #include <iostream>
 #include <iterator>
@@ -29,8 +30,15 @@ auto main(int argc, char* argv[]) -> int {
     auto cpu = riscvemu::CPU(ctx);
 
     cpu.dumpRegisters();
-
-    cpu.run();
+    try {
+        cpu.run();
+    } catch (riscvemu::IllegalInstruction& e) {
+        printf("%s @ %llx\n", e.what(), cpu.getPC());
+        return -1;
+    } catch (riscvemu::LoadAccessFault& e) {
+        printf("%s @ %llx\n", e.what(), cpu.getPC());
+        return -1;
+    }
 
     cpu.dumpRegisters();
 }

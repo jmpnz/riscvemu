@@ -1,8 +1,10 @@
 #include "Machine.h"
 
+#include <_types/_uint64_t.h>
 #include <cstdint>
 #include <cstdio>
 #include <iostream>
+#include <sys/_types/_int64_t.h>
 
 #include "Instructions.h"
 
@@ -55,7 +57,9 @@ auto MMU::load(VirtualAddress addr, size_t size) // NOLINT
 /// @return void.
 auto MMU::store(VirtualAddress addr, size_t size, uint64_t value)
     -> void { // NOLINT
-    assert(addr >= MemoryBaseAddr && addr <= MemoryEndAddr);
+    if (!withinRange(addr)) {
+        throw LoadAccessFault();
+    }
     switch (size) {
     case 8:
         return store8(addr, value);
@@ -373,38 +377,38 @@ auto CPU::execute(const Instruction& instruction) -> void {
         auto imm   = inst.Imm;
         auto rs1   = inst.Rs1;
         auto rs2   = inst.Rs2;
-        auto addr  = this->registers[(size_t)rs1] + (uint64_t)imm;
-        auto value = this->registers[(size_t)rs2];
+        auto addr  = this->getRegister(rs1) + (int64_t)imm;
+        auto value = this->getRegister(rs2);
 
         if (inst.Funct3 == 0b000) {
             // SB: Store byte at address.
-            printf("Store @ %llx : %llu", this->registers[(size_t)rs2], addr);
+            printf("Store @ %llx : %llu", this->getRegister(rs2), addr);
             this->store(addr, 8, value);
         }
         if (inst.Funct3 == 0b001) {
             // SH: Store half word at address.
-            printf("Store @ %llx : %llu", this->registers[(size_t)rs2], addr);
+            printf("Store @ %llx : %llu", this->getRegister(rs2), addr);
             this->store(addr, 16, value);
             printf("Memory @ %llx : %llu", addr, this->ctx->mmu.load16(addr));
         }
         if (inst.Funct3 == 0b010) {
             // SW: Store word at address.
-            printf("Store value %llx @ %llx", this->registers[(size_t)rs2],
+            printf("Store value %llx @ %llx\n", this->getRegister(rs2),
                    addr - MemoryBaseAddr);
             this->store(addr, 32, value);
             printf("Memory @ %llx : %llu", addr, this->ctx->mmu.load32(addr));
         }
         if (inst.Funct3 == 0b011) {
             // SD: Store double word at address.
-            printf("Store @ %llx : %llu", this->registers[(size_t)rs2], addr);
+            printf("Store @ %llx : %llu", this->getRegister(rs2), addr);
             this->store(addr, 64, value);
         }
         break;
     }
     case OPCode::ARITHR: {
         auto inst = Rtype(instruction.instruction);
-        auto rs1  = this->registers[(size_t)inst.Rs1];
-        auto rs2  = this->registers[(size_t)inst.Rs2];
+        auto rs1  = this->getRegister(inst.Rs1);
+        auto rs2  = this->getRegister(inst.Rs2);
 
         if (inst.Funct3 == 0b000 && inst.Funct7 == 0b0000000) {
             // ADD instruction
@@ -425,6 +429,7 @@ auto CPU::execute(const Instruction& instruction) -> void {
     }
 
     default: {
+        throw IllegalInstruction();
         printf("Unknown instruction : %x\n", instruction.instruction);
         break;
     }

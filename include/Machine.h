@@ -22,7 +22,7 @@ using VirtualAddress = uint64_t;
 
 /// @brief MMU will have 128 MiB.
 static constexpr uint64_t MemoryMaxSize =
-    (static_cast<const uint64_t>(1024 * 1024 * 128));
+    (static_cast<const uint64_t>(1024 * 1024 * 1));
 
 /// @brief MMU Base address.
 static constexpr VirtualAddress MemoryBaseAddr = 0x80000000;
@@ -35,7 +35,19 @@ static constexpr uint64_t MemoryEndAddr = MemoryMaxSize + MemoryBaseAddr - 1;
 struct LoadAccessFault : public std::exception {
     int code = 5;
 
-    const char* what() const throw() { return "Load access fault"; }
+    [[nodiscard]] auto what() const noexcept -> const char* override {
+        return "Load access fault";
+    }
+};
+
+/// @brief IllegalInstruction exception used to handle unimplemented
+/// or illegal instructions.
+struct IllegalInstruction : public std::exception {
+    int code = 2;
+
+    [[nodiscard]] auto what() const noexcept -> const char* override {
+        return "Illegal Instruction";
+    }
 };
 
 /// @brief MMU represents a memory management unit, used to handle address
@@ -159,6 +171,9 @@ class CPU {
         std::memcpy(this->ctx->mmu.memory.data(), this->ctx->code.data(),
                     this->ctx->code.size());
     }
+
+    /// @brief Return program counter.
+    [[nodiscard]] auto inline getPC() const -> uint64_t { return pc; }
 
     /// @brief Run the CPU instance, asserts if memory is non-empty and has
     /// instructions.
