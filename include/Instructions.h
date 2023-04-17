@@ -10,39 +10,39 @@ namespace riscvemu {
 /// @brief Register enum encodes the ABI name for RISC-V registers.
 /// The ABI names are described in the RISC-V calling conventions.
 enum class Register {
-    Zero, // Hard-wired zero
-    Ra,   // Return address
-    Sp,   // x2 is used as the stack pointer
-    Gp,   // Global pointer
-    Tp,   // Thread pointer
-    T0,   // Temporary
-    T1,   // Temporary T1
-    T2,   // Temporary T2
-    S0,   // Saved register (frame pointer)
-    S1,   // Saved register
-    A0,   // Function arguments / Return values
-    A1,   // Function arguments
-    A2,   // Function arguments
-    A3,   // Function arguments
-    A4,   // Function arguments
-    A5,   // Function arguments
-    A6,   // Function arguments
-    A7,   // Function arguments
-    S2,   // Saved registers
-    S3,   // Saved registers
-    S4,   // Saved registers
-    S5,   // Saved registers
-    S6,   // Saved registers
-    S7,   // Saved registers
-    S8,   // Saved registers
-    S9,   // Saved registers
-    S10,  // Saved registers
-    S11,  // Saved registers
-    T3,   // Temporary T3
-    T4,   // Temporary T4
-    T5,   // Temporary T5
-    T6,   // Temporary T6
-    Pc,   // Program counter  (not explicitely declared)
+    Zero = 0, // Hard-wired zero
+    Ra,       // Return address
+    Sp,       // x2 is used as the stack pointer
+    Gp,       // Global pointer
+    Tp,       // Thread pointer
+    T0,       // Temporary
+    T1,       // Temporary T1
+    T2,       // Temporary T2
+    S0,       // Saved register (frame pointer)
+    S1,       // Saved register
+    A0,       // Function arguments / Return values
+    A1,       // Function arguments
+    A2,       // Function arguments
+    A3,       // Function arguments
+    A4,       // Function arguments
+    A5,       // Function arguments
+    A6,       // Function arguments
+    A7,       // Function arguments
+    S2,       // Saved registers
+    S3,       // Saved registers
+    S4,       // Saved registers
+    S5,       // Saved registers
+    S6,       // Saved registers
+    S7,       // Saved registers
+    S8,       // Saved registers
+    S9,       // Saved registers
+    S10,      // Saved registers
+    S11,      // Saved registers
+    T3,       // Temporary T3
+    T4,       // Temporary T4
+    T5,       // Temporary T5
+    T6,       // Temporary T6
+    Pc,       // Program counter  (not explicitely declared)
     Unknown,
 };
 
@@ -207,7 +207,7 @@ enum class OPCode {
     SRAW = 0b0111011,
 };
 
-/// @brief Rtype instructions.
+/// @brief Rtype instructions for register to register operations.
 struct Rtype {
     uint32_t Funct7;
     Register Rs2;
@@ -226,7 +226,7 @@ struct Rtype {
     }
 };
 
-/// @brief Itype instructions.
+/// @brief Itype instructions for short immediates and loads.
 struct Itype {
     int32_t Imm;
     Register Rs1;
@@ -243,7 +243,7 @@ struct Itype {
     }
 };
 
-/// @brief Stype instructions.
+/// @brief Stype instructions for stores.
 struct Stype {
     int32_t Imm;
     Register Rs2;
@@ -263,7 +263,7 @@ struct Stype {
     }
 };
 
-/// @brief Jtype instructions.
+/// @brief Jtype instructions for unconditional jumps.
 struct Jtype {
     Register Rd;
     int32_t Imm;
@@ -283,7 +283,7 @@ struct Jtype {
     }
 };
 
-/// @brief Btype instructions.
+/// @brief Btype instructions for conditional branches.
 struct Btype {
     int32_t Imm;
     Register Rs2;
@@ -308,7 +308,7 @@ struct Btype {
     }
 };
 
-/// @brief Utype instructions.
+/// @brief Utype instructions for long immediates.
 struct Utype {
     int32_t Imm;
     Register Rd;

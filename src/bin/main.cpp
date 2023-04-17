@@ -32,12 +32,9 @@ auto main(int argc, char* argv[]) -> int {
     cpu.dumpRegisters();
     try {
         cpu.run();
-    } catch (riscvemu::IllegalInstruction& e) {
+    } catch (std::exception& e) {
         printf("%s @ %llx\n", e.what(), cpu.getPC());
-        return -1;
-    } catch (riscvemu::LoadAccessFault& e) {
-        printf("%s @ %llx\n", e.what(), cpu.getPC());
-        return -1;
+        return - -1;
     }
 
     cpu.dumpRegisters();

@@ -445,12 +445,18 @@ void CPU::run() {
         this->pc += 4;
         printf("==== PRE-EXECUTE ====\n");
         this->dumpRegisters();
-        this->execute(inst);
+        try {
+            this->execute(inst);
+        } catch (riscvemu::IllegalInstruction& e) {
+            printf("%s @ %llx\n", e.what(), this->getPC());
+            break;
+        } catch (riscvemu::LoadAccessFault& e) {
+            printf("%s @ %llx\n", e.what(), this->getPC());
+            break;
+        }
+
         printf("==== POST-EXECUTE ====\n");
         this->dumpRegisters();
-
-        if (this->pc == 0 || inst.instruction == 1)
-            break;
     }
 }
 
