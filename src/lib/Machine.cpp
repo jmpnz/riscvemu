@@ -177,9 +177,16 @@ auto CPU::decode(uint32_t instruction) -> Instruction {
                        .instruction = instruction};
 }
 
+/// @brief Get value stored in the register.
+/// @param reg: Register
+/// @return uint64_t
+auto CPU::getRegister(Register reg) -> uint64_t {
+    return this->registers[(size_t)reg];
+}
+
 /// @brief Set register reg with given value.
-/// @param reg
-/// @param value
+/// @param reg: Register
+/// @param value uint64_t
 /// @return void
 auto CPU::setRegister(Register reg, uint64_t value) -> void {
     if (reg != Register::Zero) {
@@ -262,6 +269,54 @@ auto CPU::execute(const Instruction& instruction) -> void {
         this->pc   = (this->registers[(size_t)rs1] + (int64_t)imm) & 0xFFFFFFFE;
         this->setRegister(rd, oldPC);
         // TODO: raise Misaligned exception if address is misaligned
+        break;
+    }
+    case OPCode::BRANCH: {
+        // Btype instruction (Branching).
+        auto inst = Btype(instruction.instruction);
+        auto imm  = inst.Imm;
+        auto rs1  = inst.Rs1;
+        auto rs2  = inst.Rs2;
+
+        if (inst.Funct3 == 0b000) /* BEQ */ {
+            // BEQ : take the branch if [rs1] == [rs2]
+            if (this->getRegister(rs1) == this->getRegister(rs2)) {
+                this->pc = this->pc + (int64_t)imm - 4;
+            }
+        }
+        if (inst.Funct3 == 0b001) /* BNE */ {
+            // BNE : take the branch if [rs1] != [rs2]
+            if (this->getRegister(rs1) != this->getRegister(rs2)) {
+                this->pc = (this->pc + (int64_t)imm - 4);
+            }
+        }
+        if (inst.Funct3 == 0b100) /* BLT */ {
+            // BLT : take the branch if [rs1] < [rs2]
+            if ((int64_t)this->getRegister(rs1) <
+                (int64_t)this->getRegister(rs2)) {
+                this->pc = this->pc + (int64_t)imm - 4;
+            }
+        }
+        if (inst.Funct3 == 0b101) /* BGE */ {
+            // BGE : take the branch if [rs1] >= [rs2]
+            if ((int64_t)this->getRegister(rs1) >=
+                (int64_t)this->getRegister(rs2)) {
+                this->pc = this->pc + (int64_t)imm - 4;
+            }
+        }
+        if (inst.Funct3 == 0b110) /* BLTU */ {
+            // BLTU : (unsigned) take the branch if [rs1] < [rs2]
+            if (this->getRegister(rs1) < this->getRegister(rs2)) {
+                this->pc = this->pc + (int64_t)imm - 4;
+            }
+        }
+        if (inst.Funct3 == 0b111) /* BGEU */ {
+            // BGEU : (unsigned) take the branch if [rs1] >= [rs2]
+            if (this->getRegister(rs1) >= this->getRegister(rs2)) {
+                this->pc = this->pc + (int64_t)imm - 4;
+            }
+        }
+
         break;
     }
     case OPCode::LOAD: {
@@ -377,14 +432,9 @@ auto CPU::execute(const Instruction& instruction) -> void {
 }
 
 void CPU::run() {
-    auto count = 0;
     while (true) {
-        count += 1;
         if (this->pc < MemoryBaseAddr ||
             (MemoryBaseAddr + this->ctx->code.size()) <= this->pc) {
-            break;
-        }
-        if (count > 10000) {
             break;
         }
         auto nextInst = this->fetch();

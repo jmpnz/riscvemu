@@ -119,7 +119,7 @@ enum class OPCode {
     ADDI = 0b0010011,
     // Set Less Than Immediate.
     SLTI = 0b0010011,
-    // Set Less Than Immediate Upper.
+    // Set Less Than Immediate Unsigned.
     SLTIU = 0b0010011,
     // Xor Immediate.
     XORI = 0b0010011,
