@@ -5,7 +5,7 @@ project(riscvemu LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 # Useful debug options for the default build
 # lots of warnings and errors.
-add_compile_options(-g -Wall -Wextra -Werror -pedantic)
+add_compile_options(-g -Wall -Wextra -Werror -pedantic -Wno-sign-compare)
 
 include_directories("${PROJECT_SOURCE_DIR}/include")
 add_subdirectory("${PROJECT_SOURCE_DIR}/src/lib")

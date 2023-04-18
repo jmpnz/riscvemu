@@ -223,6 +223,9 @@ auto CPU::dumpRegisters() -> void {
     printf("\n");
 }
 
+/// @brief Execute an instruction.
+/// @param Instruction&
+/// @return void
 auto CPU::execute(const Instruction& instruction) -> void {
     switch (instruction.opcode) {
     case OPCode::LUI: {
@@ -283,39 +286,39 @@ auto CPU::execute(const Instruction& instruction) -> void {
         if (inst.Funct3 == 0b000) /* BEQ */ {
             // BEQ : take the branch if [rs1] == [rs2]
             if (this->getRegister(rs1) == this->getRegister(rs2)) {
-                this->pc = this->pc + (int64_t)imm - 4;
+                this->pc = this->pc + (int64_t)imm;
             }
         }
         if (inst.Funct3 == 0b001) /* BNE */ {
             // BNE : take the branch if [rs1] != [rs2]
             if (this->getRegister(rs1) != this->getRegister(rs2)) {
-                this->pc = (this->pc + (int64_t)imm - 4);
+                this->pc = (this->pc + (int64_t)imm);
             }
         }
         if (inst.Funct3 == 0b100) /* BLT */ {
             // BLT : take the branch if [rs1] < [rs2]
             if ((int64_t)this->getRegister(rs1) <
                 (int64_t)this->getRegister(rs2)) {
-                this->pc = this->pc + (int64_t)imm - 4;
+                this->pc = this->pc + (int64_t)imm;
             }
         }
         if (inst.Funct3 == 0b101) /* BGE */ {
             // BGE : take the branch if [rs1] >= [rs2]
             if ((int64_t)this->getRegister(rs1) >=
                 (int64_t)this->getRegister(rs2)) {
-                this->pc = this->pc + (int64_t)imm - 4;
+                this->pc = this->pc + (int64_t)imm;
             }
         }
         if (inst.Funct3 == 0b110) /* BLTU */ {
             // BLTU : (unsigned) take the branch if [rs1] < [rs2]
             if (this->getRegister(rs1) < this->getRegister(rs2)) {
-                this->pc = this->pc + (int64_t)imm - 4;
+                this->pc = this->pc + (int64_t)imm;
             }
         }
         if (inst.Funct3 == 0b111) /* BGEU */ {
             // BGEU : (unsigned) take the branch if [rs1] >= [rs2]
             if (this->getRegister(rs1) >= this->getRegister(rs2)) {
-                this->pc = this->pc + (int64_t)imm - 4;
+                this->pc = this->pc + (int64_t)imm;
             }
         }
 
@@ -409,8 +412,52 @@ auto CPU::execute(const Instruction& instruction) -> void {
         auto rs2  = this->getRegister(inst.Rs2);
 
         if (inst.Funct3 == 0b000 && inst.Funct7 == 0b0000000) {
-            // ADD instruction
+            // ADD: add [rs1] to [rs2] store the result in [rd].
             this->setRegister(inst.Rd, rs1 + rs2);
+        }
+        if (inst.Funct3 == 0b000 && inst.Funct7 == 0b0000010) {
+            // SUB: substract [rs2] from [rs1] store the result in [rd].
+            this->setRegister(inst.Rd, rs1 - rs2);
+        }
+        if (inst.Funct3 == 0b001 && inst.Funct7 == 0b0000000) {
+            // SLL: Shift Left Logical.
+            auto value = rs1 << rs2;
+            this->setRegister(inst.Rd, value);
+        }
+        if (inst.Funct3 == 0b010 && inst.Funct7 == 0b0000000) {
+            // SLT: Set if Less Than
+            auto value = ((int64_t)rs1 < (int64_t)rs2) ? 1 : 0;
+            this->setRegister(inst.Rd, value);
+        }
+        if (inst.Funct3 == 0b011 && inst.Funct7 == 0b0000000) {
+            // SLTU: Set if Less Than Unsigned.
+            auto value = (rs1 < rs2) ? 1 : 0;
+            this->setRegister(inst.Rd, value);
+        }
+        if (inst.Funct3 == 0b100 && inst.Funct7 == 0b0000000) {
+            // XOR: Set [rd] to [rs1] ^ [rs2].
+            auto value = rs1 ^ rs2;
+            this->setRegister(inst.Rd, value);
+        }
+        if (inst.Funct3 == 0b101 && inst.Funct7 == 0b0000000) {
+            // SRL: Shift Right Logical.
+            auto value = rs1 >> rs2;
+            this->setRegister(inst.Rd, value);
+        }
+        if (inst.Funct3 == 0b101 && inst.Funct7 == 0b0000010) {
+            // SRA: Shift Right Arithmetic.
+            auto value = (int64_t)rs1 >> rs2;
+            this->setRegister(inst.Rd, value);
+        }
+        if (inst.Funct3 == 0b110 && inst.Funct7 == 0b0000000) {
+            // OR: Set [rd] to [r1] | [r2].
+            auto value = rs1 | rs2;
+            this->setRegister(inst.Rd, value);
+        }
+        if (inst.Funct3 == 0b111 && inst.Funct7 == 0b0000000) {
+            // AND: Set [rd] to [r1] ^ [r2].
+            auto value = rs1 & rs2;
+            this->setRegister(inst.Rd, value);
         }
         break;
     }
@@ -422,6 +469,52 @@ auto CPU::execute(const Instruction& instruction) -> void {
         if (inst.Funct3 == 0b000) {
             // ADDI: add immmediate value to rs1 store result in rd.
             this->setRegister(inst.Rd, rs1 + imm);
+        }
+        if (inst.Funct3 == 0b010) {
+            // SLTI : Set if Less Than Immediate.
+            auto value =
+                ((int64_t)this->getRegister(inst.Rs1) < (int64_t)imm) ? 1 : 0;
+            this->setRegister(inst.Rd, value);
+        }
+        if (inst.Funct3 == 0b011) {
+            // SLTIU: Set if Less Than Immediate (Unsigned).
+            auto value = (this->getRegister(inst.Rs1) < imm) ? 1 : 0;
+            this->setRegister(inst.Rd, value);
+        }
+        if (inst.Funct3 == 0b100) {
+            // XORI: Compute bitwise exclusive-OR of the sign-extended
+            // immediate and [rs1], writing the result to [rd].
+            auto value = (this->getRegister(inst.Rs1) ^ imm);
+            this->setRegister(inst.Rd, value);
+        }
+        if (inst.Funct3 == 0b110) {
+            // ORI: Compute bitwise OR of the sign-extended
+            // immediate and [rs1], writing the result to [rd].
+            auto value = (this->getRegister(inst.Rs1) | imm);
+            this->setRegister(inst.Rd, value);
+        }
+        if (inst.Funct3 == 0b111) {
+            // AND: Compute bitwise AND of the sign-extended
+            // immediate and [rs1], writing the result to [rd].
+            auto value = (this->getRegister(inst.Rs1) & imm);
+            this->setRegister(inst.Rd, value);
+        }
+        if (inst.Funct3 == 0b001) {
+            // SLLI: Shift Left Logical Immediate
+            auto shamt = (uint32_t)(imm & 0x3f);
+            this->setRegister(inst.Rd, this->getRegister(inst.Rs1) << shamt);
+        }
+        if (inst.Funct3 == 0b101) {
+            auto funct7 = Rtype(instruction.instruction).Funct7;
+            if ((funct7 >> 1) == 0x00) {
+                // SRLI: Shift Right Logical Immediate.
+                this->setRegister(inst.Rd, this->getRegister(inst.Rs1) >> imm);
+
+            } else if ((funct7 >> 1) == 0x10) {
+                // SRAI: Shift Right Arithmetic Immediate.
+                this->setRegister(inst.Rd,
+                                  (int32_t)this->getRegister(inst.Rs1) >> imm);
+            }
         }
         break;
     }
