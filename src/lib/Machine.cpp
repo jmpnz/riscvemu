@@ -247,7 +247,7 @@ auto CPU::execute(const Instruction& instruction) -> void {
         auto imm  = inst.Imm;
         printf("Instruction bits :%x\n", instruction.instruction);
         // AUIPC: add upper immediate to pc builds a pc-relative address.
-        auto offset = ((int64_t)this->pc + (int64_t)imm) - 4;
+        auto offset = ((int64_t)this->pc + (int64_t)imm);
         this->setRegister(rd, offset);
         break;
     }
@@ -259,7 +259,7 @@ auto CPU::execute(const Instruction& instruction) -> void {
         printf("Instruction bits :%x\n", instruction.instruction);
         // JAL: jump and link
         this->setRegister(rd, this->pc);
-        this->pc = this->pc + (int64_t)imm - 4;
+        this->pc = this->pc + (int64_t)imm;
         // TODO: raise Misaligned exception if address is misaligned
         break;
     }
@@ -383,25 +383,18 @@ auto CPU::execute(const Instruction& instruction) -> void {
 
         if (inst.Funct3 == 0b000) {
             // SB: Store byte at address.
-            printf("Store @ %llx : %llu", this->getRegister(rs2), addr);
             this->store(addr, 8, value);
         }
         if (inst.Funct3 == 0b001) {
             // SH: Store half word at address.
-            printf("Store @ %llx : %llu", this->getRegister(rs2), addr);
             this->store(addr, 16, value);
-            printf("Memory @ %llx : %llu", addr, this->ctx->mmu.load16(addr));
         }
         if (inst.Funct3 == 0b010) {
             // SW: Store word at address.
-            printf("Store value %llx @ %llx\n", this->getRegister(rs2),
-                   addr - MemoryBaseAddr);
             this->store(addr, 32, value);
-            printf("Memory @ %llx : %llu", addr, this->ctx->mmu.load32(addr));
         }
         if (inst.Funct3 == 0b011) {
             // SD: Store double word at address.
-            printf("Store @ %llx : %llu", this->getRegister(rs2), addr);
             this->store(addr, 64, value);
         }
         break;
@@ -506,16 +499,105 @@ auto CPU::execute(const Instruction& instruction) -> void {
         }
         if (inst.Funct3 == 0b101) {
             auto funct7 = Rtype(instruction.instruction).Funct7;
+            auto shamt  = (uint32_t)(imm & 0x3f);
             if ((funct7 >> 1) == 0x00) {
                 // SRLI: Shift Right Logical Immediate.
-                this->setRegister(inst.Rd, this->getRegister(inst.Rs1) >> imm);
+                this->setRegister(inst.Rd,
+                                  this->getRegister(inst.Rs1) >> shamt);
 
             } else if ((funct7 >> 1) == 0x10) {
                 // SRAI: Shift Right Arithmetic Immediate.
-                this->setRegister(inst.Rd,
-                                  (int32_t)this->getRegister(inst.Rs1) >> imm);
+                this->setRegister(
+                    inst.Rd, (int32_t)this->getRegister(inst.Rs1) >> shamt);
             }
         }
+        break;
+    }
+    case OPCode::ARITHIW: {
+        // Decode as Itype for ADDI
+        auto instItype = Itype(instruction.instruction);
+        auto imm       = instItype.Imm;
+        auto rd        = instItype.Rd;
+        auto rs1       = instItype.Rs1;
+        // Decode as Rtype for SLLIW/SRLIW/SRAIW
+        auto inst   = Rtype(instruction.instruction);
+        auto funct7 = inst.Funct7;
+        auto funct3 = instItype.Funct3;
+        if (funct3 == 0b000) {
+            // ADDIW
+            this->setRegister(
+                rd, (int64_t)(int32_t)(this->getRegister(rs1) + (int64_t)imm));
+        }
+        if (funct3 == 0b001) {
+            // SLLIW
+            auto shamt = (uint32_t)(imm & 0x3f);
+            this->setRegister(inst.Rd,
+                              (int64_t)(int32_t)this->getRegister(inst.Rs1)
+                                  << shamt);
+        }
+        if (funct3 == 0b101) {
+            auto shamt = (uint32_t)(imm & 0x3f);
+            if (funct7 >> 1 == 0x00) {
+                // SRLIW
+                this->setRegister(
+                    inst.Rd, (int64_t)(int32_t)this->getRegister(rs1) >> shamt);
+            }
+            if (funct7 >> 1 == 0x10) {
+                // SRAIW
+                this->setRegister(
+                    inst.Rd, (int64_t)(int32_t)this->getRegister(rs1) >> shamt);
+            }
+        }
+    }
+    case OPCode::ARITHRW: {
+        // Stype instruction.
+        auto inst   = Rtype(instruction.instruction);
+        auto rd     = inst.Rd;
+        auto rs1    = inst.Rs1;
+        auto rs2    = inst.Rs2;
+        auto funct3 = inst.Funct3;
+        auto funct7 = inst.Funct7;
+        if (funct3 == 0b000) {
+            if (funct7 >> 1 == 0x00) {
+                // ADDW
+                auto value = (int64_t)(int32_t)this->getRegister(rs1) +
+                             (int64_t)this->getRegister(rs2);
+                this->setRegister(rd, value);
+            }
+            if (funct7 >> 1 == 0x10) {
+                // SUBW
+                auto value = (int64_t)(int32_t)this->getRegister(rs1) -
+                             (int64_t)this->getRegister(rs2);
+                this->setRegister(rd, value);
+            }
+        }
+        if (funct3 == 0b001) {
+            // SLLW
+            auto value = (int64_t)(int32_t)(this->getRegister(rs1)
+                                            << this->getRegister(rs2));
+            this->setRegister(rd, value);
+        }
+        if (funct3 == 0b101) {
+            if (funct7 >> 1 == 0x00) {
+                // SRLW
+                auto value = (int64_t)(int32_t)(this->getRegister(rs1) >>
+                                                this->getRegister(rs2));
+                this->setRegister(rd, value);
+            }
+            if (funct7 >> 1 == 0x10) {
+                // SRAW
+                auto value =
+                    (int64_t)(int32_t)(this->getRegister(rs1) >>
+                                       (int32_t)this->getRegister(rs2));
+                this->setRegister(rd, value);
+            }
+        }
+    }
+    case OPCode::ECALL:
+        // ECALL & EBREAK differ on their Funct7 but since we don't need the debug
+        // calls we can just handle ECALL here.
+        break;
+    case OPCode::FENCE: {
         break;
     }
 

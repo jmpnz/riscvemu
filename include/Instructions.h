@@ -134,6 +134,27 @@ enum class OPCode {
     // Shift Right Arithmetic
     SRAI = 0b0010011,
 
+    // Arithmetic immediate operations for wide registers (RV64I).
+    ARITHIW = 0b0011011,
+    // ADDIW: Add Immediate Wide.
+    ADDIW = 0b0011011,
+    SLLIW = 0b0011011,
+    SRLIW = 0b0011011,
+    SRAIW = 0b0011011,
+
+    // Arithmetic register to register operations for wide registers (RV64I).
+    ARITHRW = 0b0111011,
+    // Add Wide
+    ADDW = 0b0111011,
+    // Substract Wide
+    SUBW = 0b0111011,
+    // Shift Left Logical Wide.
+    SLLW = 0b0111011,
+    // Shift Right Logical Wide.
+    SRLW = 0b0111011,
+    // Shift Right Arithmetic Wide.
+    SRAW = 0b0111011,
+
     // Arithmetic register to register operations.
     ARITHR = 0b0110011,
     // Add
@@ -181,30 +202,6 @@ enum class OPCode {
     // Store operations opcodes.
     // Store double.
     SD = 0b0100011,
-
-    // Arithemtic immediate operations.
-    ARITHIW = 0b0011011,
-    // Add Immediate Wide
-    ADDIW = 0b0011011,
-    // SSLI  Wide
-    SLLIW = 0b0011011,
-    // SRLI  Wide
-    SRLIW = 0b0011011,
-    // SRAI Immediate Wide
-    SRAIW = 0b0011011,
-
-    // Arithmetic register to register operations.
-    ARITHRW = 0b0111011,
-    // ADD Wide
-    ADDW = 0b0111011,
-    // SUB Wide
-    SUBW = 0b0111011,
-    // SLL Wide
-    SLLW = 0b0111011,
-    // SRL Wide
-    SRLW = 0b0111011,
-    // SRA Wide
-    SRAW = 0b0111011,
 };
 
 /// @brief Rtype instructions for register to register operations.
