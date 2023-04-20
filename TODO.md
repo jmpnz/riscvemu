@@ -11,7 +11,5 @@
 
 [ ] Ensure correctness with `riscv-tests` for end to end tests. 
 
-[ ] Write an architecture doc and use excalidraw to draw architecture.
-
 [ ] Check timdbg blogposts, maybe write a time travel debugger (for fun lol)
 

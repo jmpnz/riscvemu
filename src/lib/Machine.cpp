@@ -246,9 +246,8 @@ auto CPU::execute(const Instruction& instruction) -> void {
         auto inst = Utype(instruction.instruction);
         auto rd   = inst.Rd;
         auto imm  = inst.Imm;
-        printf("Instruction bits :%x\n", instruction.instruction);
         // AUIPC: add upper immediate to pc builds a pc-relative address.
-        auto offset = ((int64_t)this->pc + (int64_t)imm);
+        auto offset = (this->pc + (int32_t)(imm)-4);
         this->setRegister(rd, offset);
         break;
     }
@@ -257,10 +256,9 @@ auto CPU::execute(const Instruction& instruction) -> void {
         auto inst = Jtype(instruction.instruction);
         auto rd   = inst.Rd;
         auto imm  = inst.Imm;
-        printf("Instruction bits :%x\n", instruction.instruction);
         // JAL: jump and link
         this->setRegister(rd, this->pc);
-        this->pc = this->pc + (int64_t)imm;
+        this->pc = this->pc + (int64_t)imm - 4;
         // TODO: raise Misaligned exception if address is misaligned
         break;
     }
@@ -272,7 +270,8 @@ auto CPU::execute(const Instruction& instruction) -> void {
         auto imm  = inst.Imm;
         // JALR: (indirect) jump and link register.
         auto oldPC = this->pc;
-        this->pc   = (this->registers[(size_t)rs1] + (int64_t)imm) & 0xFFFFFFFE;
+        this->pc =
+            (this->registers[(size_t)rs1] + (int64_t)imm) & 0xFFFFFFFE - 4;
         this->setRegister(rd, oldPC);
         // TODO: raise Misaligned exception if address is misaligned
         break;
@@ -466,8 +465,7 @@ auto CPU::execute(const Instruction& instruction) -> void {
         }
         if (inst.Funct3 == 0b010) {
             // SLTI : Set if Less Than Immediate.
-            auto value =
-                ((int64_t)this->getRegister(inst.Rs1) < (int64_t)imm) ? 1 : 0;
+            auto value = (this->getRegister(inst.Rs1) < (int64_t)imm) ? 1 : 0;
             this->setRegister(inst.Rd, value);
         }
         if (inst.Funct3 == 0b011) {
@@ -619,20 +617,13 @@ void CPU::run() {
         auto nextInst = this->fetch();
         auto inst     = this->decode(nextInst);
         this->pc += 4;
-        printf("==== PRE-EXECUTE ====\n");
-        this->dumpRegisters();
         try {
             this->execute(inst);
         } catch (riscvemu::IllegalInstruction& e) {
-            printf("%s @ %llx\n", e.what(), this->getPC());
             break;
         } catch (riscvemu::LoadAccessFault& e) {
-            printf("%s @ %llx\n", e.what(), this->getPC());
             break;
         }
-
-        printf("==== POST-EXECUTE ====\n");
-        this->dumpRegisters();
     }
 }
 

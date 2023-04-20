@@ -164,7 +164,7 @@ class CPU {
         // Register x0 is always hardwired to 0.
         this->registers[0] = 0x00;
         /// Register x2 is used as the stack pointer by the ABI.
-        this->registers[2] = MemoryBaseAddr + MemoryMaxSize;
+        this->registers[2] = MemoryBaseAddr + MemoryMaxSize - 4;
         /// Program counter is set to the base memory address.
         this->pc = MemoryBaseAddr;
         /// Move code to MMU.

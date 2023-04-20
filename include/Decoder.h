@@ -10,6 +10,13 @@ namespace riscvemu {
 // in the first 7 bits.
 static constexpr uint32_t OPCodeMask = 0x7f;
 
+inline auto signExtend(int32_t imm, int bit_count) -> int32_t {
+    if ((imm & ((1 << bit_count) - 1)) != 0) {
+        imm |= ~((1 << bit_count) - 1);
+    }
+    return imm;
+}
+
 /// @brief Rtype instructions for register to register operations.
 struct Rtype {
     uint32_t Funct7;
@@ -39,7 +46,7 @@ struct Itype {
     /// @brief Construction takes an encoded instruction
     /// and unpacks the components.
     Itype(uint32_t inst) {
-        Imm    = ((int64_t)(int32_t)(inst & 0xfff00000)) >> 20;
+        Imm    = ((int32_t)(inst & 0xfff00000)) >> 20;
         Rs1    = Register((inst >> 15) & 0b11111);
         Rd     = Register((inst >> 7) & 0b11111);
         Funct3 = (inst >> 12) & 0b111;
