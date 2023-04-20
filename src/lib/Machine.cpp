@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <iostream>
 
+#include "Decoder.h"
 #include "Instructions.h"
 
 namespace riscvemu {
