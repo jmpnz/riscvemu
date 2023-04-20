@@ -15,9 +15,9 @@ add_subdirectory("${PROJECT_SOURCE_DIR}/src/bin")
 find_package(doctest REQUIRED)
 
 # Make test executable
-# add_executable(test test/main.cpp src/file_manager.cpp src/storage.cpp)
-# target_compile_features(test PRIVATE cxx_std_17)
-# target_link_libraries(test PRIVATE doctest::doctest)# build the main riscvemu executable
+add_executable(riscvemu-tests tests/main.cpp src/lib/Decoder.cpp src/lib/Instructions.cpp)
+target_compile_features(riscvemu-tests PRIVATE cxx_std_17)
+target_link_libraries(riscvemu-tests PRIVATE doctest::doctest)# build the main riscvemu executable
 
 # build the binary
 add_executable(riscvemu src/bin/main.cpp)
