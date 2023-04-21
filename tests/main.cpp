@@ -195,3 +195,11 @@ TEST_CASE("testing sra instruction") {
     CHECK(cpu.getRegister(riscvemu::Register::A5) ==
           ((uint64_t)(int64_t)-8) >> 1);
 }
+
+TEST_CASE("testing addw instruction") {
+    const auto* fp = "addw.bin";
+    auto cpu       = setupTestContext(fp);
+    cpu.run();
+
+    CHECK(cpu.getRegister(riscvemu::Register::A2) == 0x7f00002a);
+}
