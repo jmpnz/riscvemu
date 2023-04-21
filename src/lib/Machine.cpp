@@ -218,7 +218,6 @@ auto CPU::dumpRegisters() -> void {
         printf("x[%d]/%s  =  0x%llx\n", i, getRegisterABIName(reg),
                this->registers[i]);
     }
-    printf("Program Counter: 0x%zx\n", this->pc);
     printf("\n");
 }
 
@@ -235,7 +234,7 @@ auto CPU::execute(const Instruction& instruction) -> void {
         // LUI: load upper immediate places the the immediate value
         // in the top 20 bits of the destination register rd filling
         // the lowest 12 bits with zeroes.
-        auto value = (uint64_t)(int64_t)(imm & 0xFFFFF000);
+        auto value = signExtend(imm & 0xFFFFF000, 64);
         this->setRegister(rd, value);
         break;
     }
@@ -245,7 +244,7 @@ auto CPU::execute(const Instruction& instruction) -> void {
         auto rd   = inst.Rd;
         auto imm  = inst.Imm;
         // AUIPC: add upper immediate to pc builds a pc-relative address.
-        auto offset = (this->pc + (int32_t)(imm)-4);
+        auto offset = (this->pc + signExtend(imm & 0xFFFFF000, 64) - 4);
         this->setRegister(rd, offset);
         break;
     }
@@ -256,7 +255,7 @@ auto CPU::execute(const Instruction& instruction) -> void {
         auto imm  = inst.Imm;
         // JAL: jump and link
         this->setRegister(rd, this->pc);
-        this->pc = this->pc + (int64_t)imm - 4;
+        this->pc = this->pc + signExtend(imm - 4, 64);
         // TODO: raise Misaligned exception if address is misaligned
         break;
     }
@@ -268,8 +267,8 @@ auto CPU::execute(const Instruction& instruction) -> void {
         auto imm  = inst.Imm;
         // JALR: (indirect) jump and link register.
         auto oldPC = this->pc;
-        this->pc =
-            (this->registers[(size_t)rs1] + (int64_t)imm) & 0xFFFFFFFE - 4;
+        this->pc   = (this->registers[(size_t)rs1] + signExtend(imm, 64)) &
+                   0xFFFFFFFE - 4;
         this->setRegister(rd, oldPC);
         // TODO: raise Misaligned exception if address is misaligned
         break;
@@ -284,13 +283,13 @@ auto CPU::execute(const Instruction& instruction) -> void {
         if (inst.Funct3 == 0b000) /* BEQ */ {
             // BEQ : take the branch if [rs1] == [rs2]
             if (this->getRegister(rs1) == this->getRegister(rs2)) {
-                this->pc = this->pc + (int64_t)imm;
+                this->pc = this->pc + signExtend(imm, 64);
             }
         }
         if (inst.Funct3 == 0b001) /* BNE */ {
             // BNE : take the branch if [rs1] != [rs2]
             if (this->getRegister(rs1) != this->getRegister(rs2)) {
-                this->pc = (this->pc + (int64_t)imm);
+                this->pc = (this->pc + signExtend(imm, 64));
             }
         }
         if (inst.Funct3 == 0b100) /* BLT */ {

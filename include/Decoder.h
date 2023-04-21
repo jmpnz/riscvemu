@@ -10,11 +10,9 @@ namespace riscvemu {
 // in the first 7 bits.
 static constexpr uint32_t OPCodeMask = 0x7f;
 
-inline auto signExtend(int32_t imm, int bit_count) -> int32_t {
-    if ((imm & ((1 << bit_count) - 1)) != 0) {
-        imm |= ~((1 << bit_count) - 1);
-    }
-    return imm;
+// Sign extend bits in the lower part of value into signed int64_t.
+static inline auto signExtend(uint64_t value, uint64_t bits) -> int64_t {
+    return ((int64_t)(value << (64 - bits))) >> (64 - bits);
 }
 
 /// @brief Rtype instructions for register to register operations.
