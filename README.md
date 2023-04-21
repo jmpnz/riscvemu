@@ -31,5 +31,5 @@ them as you  wish.
 
 ## License
 
-The code source is provided as is under the [MIT License](LICENSE)
+The source code is provided as is under the [MIT License](LICENSE)
 
