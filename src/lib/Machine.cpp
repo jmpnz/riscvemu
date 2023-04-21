@@ -75,8 +75,6 @@ auto MMU::store(VirtualAddress addr, size_t size, uint64_t value)
 /// @param addr
 /// @return byte value represented as uint64_t.
 auto MMU::load8(VirtualAddress addr) -> uint64_t {
-    printf("Address to access : %llx\n", addr);
-    printf("Memory address access : %llx\n", addr - MemoryBaseAddr);
     return (uint64_t)this->memory[addr - MemoryBaseAddr];
 }
 
@@ -414,6 +412,7 @@ auto CPU::execute(const Instruction& instruction) -> void {
         }
         if (inst.Funct3 == 0b001 && inst.Funct7 == 0b0000000) {
             // SLL: Shift Left Logical.
+            // auto shamt = (this->getRegister(inst.Rs2) & 0x3f);
             auto value = rs1 << rs2;
             this->setRegister(inst.Rd, value);
         }
@@ -434,12 +433,14 @@ auto CPU::execute(const Instruction& instruction) -> void {
         }
         if (inst.Funct3 == 0b101 && inst.Funct7 == 0b0000000) {
             // SRL: Shift Right Logical.
-            auto value = rs1 >> rs2;
+            auto shamt = (this->getRegister(inst.Rs2) & 0x3f);
+            auto value = rs1 >> shamt;
             this->setRegister(inst.Rd, value);
         }
-        if (inst.Funct3 == 0b101 && inst.Funct7 == 0b0000010) {
+        if (inst.Funct3 == 0b101 && inst.Funct7 == 0b0100000) {
             // SRA: Shift Right Arithmetic.
-            auto value = (int64_t)rs1 >> rs2;
+            auto shamt = rs2 & 0x3f;
+            auto value = (uint64_t)((int64_t)rs1 >> shamt);
             this->setRegister(inst.Rd, value);
         }
         if (inst.Funct3 == 0b110 && inst.Funct7 == 0b0000000) {
@@ -499,7 +500,7 @@ auto CPU::execute(const Instruction& instruction) -> void {
         if (inst.Funct3 == 0b101) {
             auto funct7 = Rtype(instruction.instruction).Funct7;
             auto shamt  = (uint32_t)(imm & 0x3f);
-            if ((funct7 >> 1) == 0x00) {
+            if ((funct7) == 0x00) {
                 // SRLI: Shift Right Logical Immediate.
                 this->setRegister(inst.Rd,
                                   this->getRegister(inst.Rs1) >> shamt);
@@ -507,7 +508,8 @@ auto CPU::execute(const Instruction& instruction) -> void {
             } else if ((funct7 >> 1) == 0x10) {
                 // SRAI: Shift Right Arithmetic Immediate.
                 this->setRegister(
-                    inst.Rd, (int32_t)this->getRegister(inst.Rs1) >> shamt);
+                    inst.Rd,
+                    (uint64_t)((int64_t)this->getRegister(inst.Rs1) >> shamt));
             }
         }
         break;

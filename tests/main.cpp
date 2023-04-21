@@ -101,6 +101,41 @@ TEST_CASE("testing blt instruction") {
     CHECK(cpu.getPC() == riscvemu::MemoryBaseAddr + 42);
 }
 
+TEST_CASE("testing bge instruction") {
+    const auto* const fp = "bge.bin";
+    auto cpu             = setupTestContext(fp);
+    cpu.run();
+    CHECK(cpu.getRegister(riscvemu::Register::Ra) == 10);
+    CHECK(cpu.getRegister(riscvemu::Register::Sp) == 20);
+    CHECK(cpu.getPC() == riscvemu::MemoryBaseAddr + 42);
+}
+
+TEST_CASE("testing bltu instruction") {
+    const auto* const fp = "bltu.bin";
+    auto cpu             = setupTestContext(fp);
+    cpu.run();
+    CHECK(cpu.getRegister(riscvemu::Register::Ra) == 10);
+    CHECK(cpu.getRegister(riscvemu::Register::Sp) == 20);
+    CHECK(cpu.getPC() == riscvemu::MemoryBaseAddr + 42);
+}
+
+TEST_CASE("testing bgeu instruction") {
+    const auto* const fp = "bgeu.bin";
+    auto cpu             = setupTestContext(fp);
+    cpu.run();
+    CHECK(cpu.getRegister(riscvemu::Register::Ra) == 10);
+    CHECK(cpu.getRegister(riscvemu::Register::Sp) == 20);
+    CHECK(cpu.getPC() == riscvemu::MemoryBaseAddr + 42);
+}
+
+TEST_CASE("testing lw instruction") {
+    const auto* const fp = "load_store.bin";
+    auto cpu             = setupTestContext(fp);
+    cpu.run();
+    CHECK(cpu.getRegister(riscvemu::Register::T1) == 0);
+    CHECK(cpu.getRegister(riscvemu::Register::T2) == 256);
+}
+
 TEST_CASE("testing slt instruction") {
     const auto* fp = "slt.bin";
     auto cpu       = setupTestContext(fp);
@@ -109,4 +144,54 @@ TEST_CASE("testing slt instruction") {
     CHECK(cpu.getRegister(riscvemu::Register::T2) == 1);
     CHECK(cpu.getRegister(riscvemu::Register::T3) == 1);
     CHECK(cpu.getRegister(riscvemu::Register::T4) == 1);
+}
+
+TEST_CASE("testing xor instruction") {
+    const auto* fp = "xor.bin";
+    auto cpu       = setupTestContext(fp);
+    cpu.run();
+
+    CHECK(cpu.getRegister(riscvemu::Register::A1) == 3);
+    CHECK(cpu.getRegister(riscvemu::Register::A2) == 0);
+}
+
+TEST_CASE("testing or instruction") {
+    const auto* fp = "or.bin";
+    auto cpu       = setupTestContext(fp);
+    cpu.run();
+
+    CHECK(cpu.getRegister(riscvemu::Register::A1) == 3);
+    CHECK(cpu.getRegister(riscvemu::Register::A2) == 2);
+}
+
+TEST_CASE("testing and instruction") {
+    const auto* fp = "and.bin";
+    auto cpu       = setupTestContext(fp);
+    cpu.run();
+
+    CHECK(cpu.getRegister(riscvemu::Register::A1) == 2);
+    CHECK(cpu.getRegister(riscvemu::Register::A2) == 2);
+}
+
+TEST_CASE("testing sll instruction") {
+    const auto* fp = "sll.bin";
+    auto cpu       = setupTestContext(fp);
+    cpu.run();
+
+    CHECK(cpu.getRegister(riscvemu::Register::A2) == 1 << 5);
+    CHECK(cpu.getRegister(riscvemu::Register::A3) == 1 << 5);
+    CHECK(cpu.getRegister(riscvemu::Register::A4) == 1);
+}
+
+TEST_CASE("testing sra instruction") {
+    const auto* fp = "sra.bin";
+    auto cpu       = setupTestContext(fp);
+    cpu.run();
+
+    CHECK(cpu.getRegister(riscvemu::Register::A2) == (uint64_t)(int64_t)-4);
+    CHECK(cpu.getRegister(riscvemu::Register::A3) == (uint64_t)(int64_t)-2);
+    CHECK(cpu.getRegister(riscvemu::Register::A4) ==
+          (uint64_t)(int64_t)-8 >> 2);
+    CHECK(cpu.getRegister(riscvemu::Register::A5) ==
+          ((uint64_t)(int64_t)-8) >> 1);
 }
