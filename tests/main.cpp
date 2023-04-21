@@ -203,3 +203,11 @@ TEST_CASE("testing addw instruction") {
 
     CHECK(cpu.getRegister(riscvemu::Register::A2) == 0x7f00002a);
 }
+
+TEST_CASE("testing sub instruction") {
+    const auto* fp = "sub.bin";
+    auto cpu       = setupTestContext(fp);
+    cpu.run();
+
+    CHECK(cpu.getRegister(riscvemu::Register::A2) == 20);
+}

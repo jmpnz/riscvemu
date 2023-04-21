@@ -2,11 +2,19 @@
 
 `riscvemu` is a RISC-V emulator written in C++.
 
-The goal of the emulator is to act as a VM for another project I am working on.
+The goal of the emulator is to act as a VM for another project
+I am working on.
 
 ## Build
 
-You'll need CMake & Ninja
+You'll need CMake & Ninja for building the main emulator binary
+which has limited functionality, to build tests you'll need a RISC-V
+toolchain.
+
+I personally used `riscv-gnu-toolchain` which builds `gcc` and other
+binutils that might be useful for debugging such as `objcopy` & `objdump`.
+
+To build the main binary you can run the following.
 
 ```sh
 
@@ -17,7 +25,11 @@ $ ninja all
 
 ```
 
-## Style
+To automate building and running tests you can use the scripts provided
+in the scripts directory, they are pretty simplistic and you can modify
+them as you  wish.
 
-We use LLVM's style guide for C++ code (unlike LLVM code we allow exceptions).
+## License
+
+The code source is provided as is under the [MIT License](LICENSE)
 
