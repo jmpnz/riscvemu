@@ -5,3 +5,4 @@
 
 [ ] Check timdbg blogposts, maybe write a time travel debugger (for fun lol)
 
+[ ] Add a better debug output, use LSColors and write a mini TUI library
