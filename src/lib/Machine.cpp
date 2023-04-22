@@ -654,7 +654,6 @@ auto CPU::execute(const Instruction& instruction) -> void {
 
     default: {
         throw IllegalInstruction();
-        printf("Unknown instruction : %x\n", instruction.instruction);
         break;
     }
     }
