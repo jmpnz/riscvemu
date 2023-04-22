@@ -1,3 +1,4 @@
+#include "CSR.h"
 #include "Machine.h"
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
@@ -210,4 +211,17 @@ TEST_CASE("testing sub instruction") {
     cpu.run();
 
     CHECK(cpu.getRegister(riscvemu::Register::A2) == 20);
+}
+
+TEST_CASE("testing csrs instructions") {
+    const auto fp = "csrs.bin";
+    auto cpu      = setupTestContext(fp);
+    cpu.run();
+
+    CHECK(cpu.getCSR(riscvemu::MStatus) == 1);
+    CHECK(cpu.getCSR(riscvemu::MTVec) == 2);
+    CHECK(cpu.getCSR(riscvemu::MEPc) == 3);
+    CHECK(cpu.getCSR(riscvemu::SStatus) == 4);
+    CHECK(cpu.getCSR(riscvemu::STVec) == 5);
+    CHECK(cpu.getCSR(riscvemu::Sepc) == 6);
 }

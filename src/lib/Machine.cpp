@@ -1,11 +1,12 @@
-#include "Machine.h"
 
 #include <cstdint>
 #include <cstdio>
 #include <iostream>
 
+#include "CSR.h"
 #include "Decoder.h"
 #include "Instructions.h"
+#include "Machine.h"
 
 namespace riscvemu {
 
@@ -184,6 +185,11 @@ auto CPU::decode(uint32_t instruction) -> Instruction {
 auto CPU::getRegister(Register reg) -> uint64_t {
     return this->registers[(size_t)reg];
 }
+
+/// @brief Get value stored in the control or status registers.
+/// @param addr uitn64_t
+/// @return uint64_t
+auto CPU::getCSR(uint64_t addr) -> uint64_t { return this->csrs.csrs[addr]; }
 
 /// @brief Set register reg with given value.
 /// @param reg: Register
@@ -593,11 +599,56 @@ auto CPU::execute(const Instruction& instruction) -> void {
             }
         }
     }
-    case OPCode::ECALL:
+
+    case OPCode::CSR: {
+        auto inst   = instruction.instruction;
+        auto rd     = (uint64_t)((inst & 0x00000f80) >> 7);
+        auto rs1    = (uint64_t)((inst & 0x000f8000) >> 15);
+        auto addr   = (uint64_t)((inst & 0xfff00000) >> 20);
+        auto funct3 = (inst & 0x00007000) >> 12;
+        if (funct3 == 0x1) {
+            // CSRRW
+            auto t = this->csrs.load(addr);
+            this->csrs.store(addr, this->registers[rs1]);
+            this->registers[rd] = t;
+        }
+        if (funct3 == 0x2) {
+            // CSRRS
+            auto t = this->csrs.load(addr);
+            this->csrs.store(addr, t | this->registers[rs1]);
+            this->registers[rd] = t;
+        }
+        if (funct3 == 0x3) {
+            // CSRRC
+            auto t = this->csrs.load(addr);
+            this->csrs.store(addr, t & (~this->registers[rs1])); //NOLINT
+            this->registers[rd] = t;
+        }
+        if (funct3 == 0x5) {
+            // CSRRWI
+            auto zimm           = rs1;
+            this->registers[rd] = this->csrs.load(addr);
+            this->csrs.store(addr, zimm);
+        }
+        if (funct3 == 0x6) {
+            // CSRRSI
+            auto zimm = rs1;
+            auto t    = this->csrs.load(addr);
+            this->csrs.store(addr, t | zimm);
+            this->registers[rd] = t;
+        }
+        if (funct3 == 0x7) {
+            // CSRRCI
+            auto zimm = rs1;
+            auto t    = this->csrs.load(addr);
+            this->csrs.store(addr, t & (~zimm)); //NOLINT
+            this->registers[rd] = t;
+        }
+        // Control and Status instructions.
+        //
         // ECALL & EBREAK differ on their Funct7 but since we don't need the debug
-        // calls we can just handle ECALL here.
-        break;
-    case OPCode::FENCE: {
+        // calls we can just skip them.
+
         break;
     }
 
@@ -621,8 +672,10 @@ void CPU::run() {
         try {
             this->execute(inst);
         } catch (riscvemu::IllegalInstruction& e) {
+            printf("Exception Raised: Illegal Instruction: %s\n", e.what());
             break;
         } catch (riscvemu::LoadAccessFault& e) {
+            printf("Exception Raised: Load Access Fault: %s\n", e.what());
             break;
         }
     }

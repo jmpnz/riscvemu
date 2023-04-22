@@ -1,6 +1,7 @@
-set(riscvemu_lib_src 
+set(riscvemu_lib_src
     Instructions.cpp
     Machine.cpp
+    CSR.cpp
     )
 
 add_library(libriscvemu ${riscvemu_lib_src})

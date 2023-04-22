@@ -202,6 +202,16 @@ enum class OPCode {
     // Store operations opcodes.
     // Store double.
     SD = 0b0100011,
+
+    // Control and Status registers opcodes.
+    CSR = 0b1110011,
+
+    CSRRW  = 0b1110011,
+    CSRRS  = 0b1110011,
+    CSRRC  = 0b1110011,
+    CSRRWI = 0b1110011,
+    CSRRSI = 0b1110011,
+    CSRRI  = 0b1110011,
 };
 
 /// @brief Instruction represents RISC-V instructions as described

@@ -1,6 +1,7 @@
 #ifndef MACHINE_H
 #define MACHINE_H
 
+#include "CSR.h"
 #include "Instructions.h"
 
 #include <cstddef>
@@ -192,6 +193,9 @@ class CPU {
     /// @brief Get value stored in register.
     auto getRegister(Register reg) -> uint64_t;
 
+    /// @brief Get value stored in register.
+    auto getCSR(uint64_t addr) -> uint64_t;
+
     /// @brief Set register with value.
     auto setRegister(Register reg, uint64_t value) -> void;
 
@@ -217,6 +221,9 @@ class CPU {
     offset_t pc = MemoryBaseAddr;
     /// @brief Registers.
     std::array<uint64_t, 32> registers;
+
+    /// @brief Control and Status registers.
+    CSR csrs;
 
     /// @brief CPU instance contexts.
     std::unique_ptr<VMContext> ctx;
